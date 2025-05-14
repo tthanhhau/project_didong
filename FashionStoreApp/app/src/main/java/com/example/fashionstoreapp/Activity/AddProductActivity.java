@@ -83,7 +83,7 @@ public class AddProductActivity extends AppCompatActivity {
         retrofitService = new RetrofitService();
         executorService = Executors.newSingleThreadExecutor();
 
-        // Initialize views
+        // Initialize views with null check
         categorySpinner = findViewById(R.id.categorySpinner);
         productNameEditText = findViewById(R.id.productNameEditText);
         priceEditText = findViewById(R.id.priceEditText);
@@ -96,11 +96,22 @@ public class AddProductActivity extends AppCompatActivity {
         backButton = findViewById(R.id.backButton);
         addProductButton = findViewById(R.id.addProductButton);
 
+        if (categorySpinner == null || productNameEditText == null || priceEditText == null ||
+                quantityEditText == null || descriptionEditText == null || isActiveSwitch == null ||
+                isSellingSwitch == null || productImagesRecyclerView == null || addImageButton == null ||
+                backButton == null || addProductButton == null) {
+            Toast.makeText(this, "Error initializing views", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         // Initialize RecyclerView
         productImagesRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         imagesAdapter = new ProductImagesAdapter(imageUris, position -> {
-            imageUris.remove(position);
-            imagesAdapter.notifyDataSetChanged();
+            if (position >= 0 && position < imageUris.size()) {
+                imageUris.remove(position);
+                imagesAdapter.notifyDataSetChanged();
+            }
         });
         productImagesRecyclerView.setAdapter(imagesAdapter);
 
@@ -108,10 +119,12 @@ public class AddProductActivity extends AppCompatActivity {
         imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                 Uri imageUri = result.getData().getData();
-                if (imageUri != null) {
+                if (imageUri != null && !imageUris.contains(imageUri)) {
                     imageUris.add(imageUri);
                     imagesAdapter.notifyDataSetChanged();
                     requestStoragePermission();
+                } else {
+                    Toast.makeText(this, "Image already selected or invalid", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -150,12 +163,18 @@ public class AddProductActivity extends AppCompatActivity {
                     categories = response.body();
                     List<String> categoryNames = new ArrayList<>();
                     for (Category category : categories) {
-                        categoryNames.add(category.getCategory_Name());
+                        if (category != null && category.getCategory_Name() != null) {
+                            categoryNames.add(category.getCategory_Name());
+                        }
                     }
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(AddProductActivity.this,
-                            android.R.layout.simple_spinner_item, categoryNames);
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    categorySpinner.setAdapter(adapter);
+                    if (!categoryNames.isEmpty()) {
+                        ArrayAdapter<String> adapter = new ArrayAdapter<>(AddProductActivity.this,
+                                android.R.layout.simple_spinner_item, categoryNames);
+                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                        categorySpinner.setAdapter(adapter);
+                    } else {
+                        Toast.makeText(AddProductActivity.this, "No categories available", Toast.LENGTH_SHORT).show();
+                    }
                 } else if (!isActivityDestroyed) {
                     Toast.makeText(AddProductActivity.this, "Failed to load categories", Toast.LENGTH_SHORT).show();
                 }
@@ -171,6 +190,12 @@ public class AddProductActivity extends AppCompatActivity {
     }
 
     private void addProduct() {
+        if (productNameEditText == null || priceEditText == null || quantityEditText == null ||
+                descriptionEditText == null || categorySpinner == null || addProductButton == null) {
+            Toast.makeText(this, "Error initializing input fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String productName = productNameEditText.getText().toString().trim();
         String priceStr = priceEditText.getText().toString().trim();
         String quantityStr = quantityEditText.getText().toString().trim();
@@ -192,8 +217,8 @@ public class AddProductActivity extends AppCompatActivity {
             quantityEditText.setError("Quantity is required");
             return;
         }
-        if (categories == null || categoryIndex < 0) {
-            Toast.makeText(this, "Please select a category", Toast.LENGTH_SHORT).show();
+        if (categories == null || categoryIndex < 0 || categoryIndex >= categories.size()) {
+            Toast.makeText(this, "Please select a valid category", Toast.LENGTH_SHORT).show();
             return;
         }
         if (imageUris.isEmpty()) {
@@ -205,6 +230,10 @@ public class AddProductActivity extends AppCompatActivity {
         try {
             price = Integer.parseInt(priceStr);
             quantity = Integer.parseInt(quantityStr);
+            if (price <= 0 || quantity <= 0) {
+                Toast.makeText(this, "Price and quantity must be positive", Toast.LENGTH_SHORT).show();
+                return;
+            }
         } catch (NumberFormatException e) {
             Toast.makeText(this, "Invalid price or quantity", Toast.LENGTH_SHORT).show();
             return;
@@ -256,8 +285,12 @@ public class AddProductActivity extends AppCompatActivity {
                 InputStream inputStream = null;
                 try {
                     inputStream = getContentResolver().openInputStream(imageUri);
+                    if (inputStream == null) {
+                        Log.e(TAG, "Failed to open input stream for URI: " + imageUri);
+                        return;
+                    }
                     BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = 2;
+                    options.inSampleSize = 2; // Reduce image size to optimize upload
                     Bitmap bitmap = BitmapFactory.decodeStream(inputStream, null, options);
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 60, baos);
@@ -265,7 +298,7 @@ public class AddProductActivity extends AppCompatActivity {
                     bitmap.recycle();
 
                     RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), imageBytes);
-                    MultipartBody.Part filePart = MultipartBody.Part.createFormData("file", "image.jpg", requestFile);
+                    MultipartBody.Part filePart = MultipartBody.Part.createFormData("file", "image_" + System.currentTimeMillis() + ".jpg", requestFile);
                     RequestBody presetPart = RequestBody.create(MediaType.parse("text/plain"), UPLOAD_PRESET);
 
                     CloudinaryAPI cloudinaryAPI = retrofitService.getCloudinaryRetrofit().create(CloudinaryAPI.class);
@@ -286,9 +319,11 @@ public class AddProductActivity extends AppCompatActivity {
                                     }
                                 } else {
                                     progressDialog.dismiss();
-                                    String errorMessage = null;
+                                    String errorMessage = response.message();
                                     try {
-                                        errorMessage = response.errorBody() != null ? response.errorBody().string() : response.message();
+                                        if (response.errorBody() != null) {
+                                            errorMessage = response.errorBody().string();
+                                        }
                                     } catch (IOException e) {
                                         Log.e(TAG, "Error reading errorBody: ", e);
                                     }
@@ -354,8 +389,8 @@ public class AddProductActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             Log.e(TAG, "Error reading errorBody: ", e);
                         }
-                        Log.e(TAG, "Server error: " + errorMessage);
                         Toast.makeText(AddProductActivity.this, "Failed to add product: " + errorMessage, Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Server error: " + errorMessage);
                     }
                 }
             }
@@ -378,7 +413,7 @@ public class AddProductActivity extends AppCompatActivity {
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdownNow();
         }
-        // Clear Glide cache for RecyclerView images
+        // Clear Glide cache and resources
         if (imagesAdapter != null) {
             imagesAdapter.clear();
         }

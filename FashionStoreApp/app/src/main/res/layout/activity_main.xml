@@ -74,6 +74,23 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
+                <!-- Nút Thêm Sản Phẩm (addProduct) -->
+                <Button
+                    android:id="@+id/addProduct"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Thêm sản phẩm mới"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#FFA500"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:drawablePadding="8dp"
+                    android:contentDescription="Add Product"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tvHiName" />
+
                 <ImageView
                     android:id="@+id/ivSearch"
                     android:layout_width="45dp"
@@ -123,7 +140,7 @@
                     android:paddingEnd="10dp"
                     android:textStyle="italic"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/ivAvatar" />
+                    app:layout_constraintTop_toBottomOf="@+id/addProduct" />
 
                 <!-- Thêm ViewPager2 -->
                 <androidx.viewpager2.widget.ViewPager2

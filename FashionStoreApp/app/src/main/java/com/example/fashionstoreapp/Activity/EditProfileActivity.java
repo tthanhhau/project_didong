@@ -1,4 +1,5 @@
-package com.example.fashionstoreapp.Activity;
+
+        package com.example.fashionstoreapp.Activity;
 
 import android.Manifest;
 import android.app.Activity;
@@ -15,6 +16,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -30,7 +32,6 @@ import com.example.fashionstoreapp.R;
 import com.example.fashionstoreapp.Retrofit.UserAPI;
 import com.example.fashionstoreapp.Somethings.ObjectSharedPreferences;
 import com.example.fashionstoreapp.Somethings.RealPathUtil;
-
 
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +52,32 @@ public class EditProfileActivity extends AppCompatActivity {
     TextView tvChangePicture, tvError;
     ProgressDialog progressDialog;
 
+    // Upload Image
+    private Uri mUri;
+    public static final int MY_REQUEST_CODE = 100;
+    public static final String TAG = EditProfileActivity.class.getName();
+    public static String[] storage_permissions = {
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+    };
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    public static String[] storage_permissions_33 = {
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_AUDIO,
+            Manifest.permission.READ_MEDIA_VIDEO
+    };
+
+    public static String[] permissions() {
+        String[] p;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            p = storage_permissions_33;
+        } else {
+            p = storage_permissions;
+        }
+        return p;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,89 +91,117 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private void btnUpdateClick() {
         btnUpdate.setOnClickListener(v -> {
+            String fullName = etFullName.getText().toString().trim();
+            String email = etEmail.getText().toString().trim();
+            String phoneNumber = etPhoneNumber.getText().toString().trim();
+            String address = etAddress.getText().toString().trim();
 
-            if(etFullName.getText().toString().isEmpty()){
+            if (fullName.isEmpty()) {
                 tvError.setText("Please enter your name!");
                 return;
             }
-            if (etEmail.getText().toString().isEmpty()){
+            if (email.isEmpty()) {
                 tvError.setText("Please enter your email!");
                 return;
             }
-            if(etPhoneNumber.getText().toString().isEmpty()){
+            if (phoneNumber.isEmpty()) {
                 tvError.setText("Please enter your phone number!");
                 return;
             }
-            if (etAddress.getText().toString().isEmpty()){
+            if (address.isEmpty()) {
                 tvError.setText("Please enter your address!");
                 return;
             }
-            user = ObjectSharedPreferences.getSavedObjectFromPreference(EditProfileActivity.this, "User", "MODE_PRIVATE", User.class);
-            RequestBody userId = RequestBody.create(user.getId(),MediaType.parse("multipart/form-data"));
-            RequestBody fullName = RequestBody.create(etFullName.getText().toString(), MediaType.parse("multipart/form-data"));
-            RequestBody email = RequestBody.create(etEmail.getText().toString(), MediaType.parse("multipart/form-data"));
-            RequestBody phoneNumber = RequestBody.create(etPhoneNumber.getText().toString(), MediaType.parse("multipart/form-data"));
-            RequestBody address = RequestBody.create(etAddress.getText().toString(), MediaType.parse("multipart/form-data"));
+
+            user = ObjectSharedPreferences.getSavedObjectFromPreference(
+                    EditProfileActivity.this, "User", "MODE_PRIVATE", User.class);
+            if (user == null) {
+                tvError.setText("Please log in again!");
+                startActivity(new Intent(EditProfileActivity.this, LoginActivity.class));
+                finish();
+                return;
+            }
+
+            RequestBody userId = RequestBody.create(MediaType.parse("multipart/form-data"), user.getId());
+            RequestBody fullNameBody = RequestBody.create(MediaType.parse("multipart/form-data"), fullName);
+            RequestBody emailBody = RequestBody.create(MediaType.parse("multipart/form-data"), email);
+            RequestBody phoneNumberBody = RequestBody.create(MediaType.parse("multipart/form-data"), phoneNumber);
+            RequestBody addressBody = RequestBody.create(MediaType.parse("multipart/form-data"), address);
             MultipartBody.Part avatar = null;
-            if(mUri!=null){
-                String IMAGE_PATH = RealPathUtil.getRealPath(this, mUri);
-                Log.e("ffff", IMAGE_PATH);
-                File file = new File(IMAGE_PATH);
-                RequestBody requestFile = RequestBody.create(file, MediaType.parse("multipart/form-data"));
-                avatar=MultipartBody.Part.createFormData("avatar", file.getName(), requestFile);
+
+            if (mUri != null) {
+                String imagePath = RealPathUtil.getRealPath(this, mUri);
+                Log.d(TAG, "Image path: " + imagePath);
+                File file = new File(imagePath);
+                if (file.exists()) {
+                    RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+                    avatar = MultipartBody.Part.createFormData("avatar", file.getName(), requestFile);
+                } else {
+                    tvError.setText("Selected image file is invalid!");
+                    return;
+                }
             }
 
             progressDialog = new ProgressDialog(EditProfileActivity.this);
-            progressDialog.setMessage("Loading..."); // Setting Message
-            progressDialog.setTitle("Update Profile"); // Setting Title
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER); // Progress Dialog Style Spinner
-            progressDialog.show(); // Display Progress Dialog
+            progressDialog.setMessage("Updating profile...");
+            progressDialog.setTitle("Please wait");
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressDialog.setCancelable(false);
-            UserAPI.userApi.update(userId,avatar, fullName, email, phoneNumber, address).enqueue(new Callback<User>() {
-                @Override
-                public void onResponse(Call<User> call, Response<User> response) {
-                    User userUpdate = response.body();
-                    if(userUpdate!=null){
-                        progressDialog.dismiss();
-                        ObjectSharedPreferences.saveObjectToSharedPreference(EditProfileActivity.this, "User", "MODE_PRIVATE", userUpdate);
-                        startActivity(new Intent(EditProfileActivity.this, UserActivity.class));
-                        finish();
-                    }
-                }
+            progressDialog.show();
 
-                @Override
-                public void onFailure(Call<User> call, Throwable t) {
-                    progressDialog.dismiss();
-                    Log.e("====", "call fail + " + t.getMessage());
-                }
-            });
+            UserAPI.userApi.update(userId, avatar, fullNameBody, emailBody, phoneNumberBody, addressBody)
+                    .enqueue(new Callback<User>() {
+                        @Override
+                        public void onResponse(Call<User> call, Response<User> response) {
+                            progressDialog.dismiss();
+                            if (response.isSuccessful() && response.body() != null) {
+                                User userUpdate = response.body();
+                                ObjectSharedPreferences.saveObjectToSharedPreference(
+                                        EditProfileActivity.this, "User", "MODE_PRIVATE", userUpdate);
+                                Toast.makeText(EditProfileActivity.this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(EditProfileActivity.this, UserActivity.class));
+                                finish();
+                            } else {
+                                tvError.setText("Failed to update profile. Please try again.");
+                                Log.e(TAG, "Update failed: " + response.message());
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<User> call, Throwable t) {
+                            progressDialog.dismiss();
+                            tvError.setText("Connection error: " + t.getMessage());
+                            Log.e(TAG, "Update API call failed: " + t.getMessage());
+                        }
+                    });
         });
     }
 
     private void tvChangePictureClick() {
-        tvChangePicture.setOnClickListener(v -> {
-            CheckPermissions();
-        });
+        tvChangePicture.setOnClickListener(v -> CheckPermissions());
     }
 
-
     private void ivBackClick() {
-        ivBack.setOnClickListener(v -> {
-            onBackPressed();
-            finish();
-        });
+        ivBack.setOnClickListener(v -> finish());
     }
 
     private void LoadData() {
-        user = ObjectSharedPreferences.getSavedObjectFromPreference(EditProfileActivity.this, "User", "MODE_PRIVATE", User.class);
-        etFullName.setText(user.getUser_Name());
-        etEmail.setText(user.getEmail());
-        Glide.with(getApplicationContext()).load(user.getAvatar()).into(ivAvatar);
-        if (user.getPhone_Number()!=null){
-            etPhoneNumber.setText(user.getPhone_Number());
+        user = ObjectSharedPreferences.getSavedObjectFromPreference(
+                EditProfileActivity.this, "User", "MODE_PRIVATE", User.class);
+        if (user == null) {
+            Toast.makeText(this, "Please log in again", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(EditProfileActivity.this, LoginActivity.class));
+            finish();
+            return;
         }
-        if(user.getAddress()!=null){
-            etAddress.setText(user.getAddress());
+        etFullName.setText(user.getUserName() != null ? user.getUserName() : "");
+        etEmail.setText(user.getEmail() != null ? user.getEmail() : "");
+        etPhoneNumber.setText(user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
+        etAddress.setText(user.getAddress() != null ? user.getAddress() : "");
+        if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+            Glide.with(this).load(user.getAvatar()).into(ivAvatar);
+        } else {
+            ivAvatar.setImageResource(R.drawable.avatar_admin); // Default avatar if none
         }
     }
 
@@ -162,33 +217,7 @@ public class EditProfileActivity extends AppCompatActivity {
         tvError = findViewById(R.id.tvError);
     }
 
-    //Upload Image
-    private Uri mUri;
-    private ProgressDialog mProgessDialog;
-    public static final int MY_REQUEST_CODE = 100;
-    public static final String TAG = EditProfileActivity.class.getName();
-    public static String[] storge_permissions = {
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE
-    };
-
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
-    public static String[] storge_permissions_33 = {
-            Manifest.permission.READ_MEDIA_IMAGES,
-            Manifest.permission.READ_MEDIA_AUDIO,
-            Manifest.permission.READ_MEDIA_VIDEO
-    };
-
-    public static String[] permissions() {
-        String[] p;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            p = storge_permissions_33;
-        } else {
-            p = storge_permissions;
-        }
-        return p;
-    }
-
+    // Image Upload
     private void CheckPermissions() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             openGallery();
@@ -200,38 +229,33 @@ public class EditProfileActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == MY_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openGallery();
-            }
+        if (requestCode == MY_REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            openGallery();
+        } else {
+            Toast.makeText(this, "Permission denied to access gallery", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void openGallery() {
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        mActivityResultLaucher.launch(Intent.createChooser(intent, "Select Picture"));
+        mActivityResultLauncher.launch(Intent.createChooser(intent, "Select Picture"));
     }
 
-    private ActivityResultLauncher<Intent> mActivityResultLaucher = registerForActivityResult(
+    private final ActivityResultLauncher<Intent> mActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>(){
-                @Override
-                public void onActivityResult(ActivityResult result){
-                    Log.e(TAG, "onActivityResult");
-                    if (result.getResultCode() == Activity.RESULT_OK){
-                        Intent data = result.getData();
-                        if(data == null){
-                            return;
-                        }
-                        Uri uri = data.getData();
-                        mUri = uri;
+            result -> {
+                Log.d(TAG, "onActivityResult");
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data != null && data.getData() != null) {
+                        mUri = data.getData();
                         try {
-                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(),uri);
+                            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), mUri);
                             ivAvatar.setImageBitmap(bitmap);
-                        } catch (IOException e){
-                            e.printStackTrace();
+                        } catch (IOException e) {
+                            Log.e(TAG, "Failed to load image: " + e.getMessage());
+                            Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }

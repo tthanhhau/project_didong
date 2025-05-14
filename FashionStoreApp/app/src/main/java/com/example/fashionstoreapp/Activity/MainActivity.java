@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,11 +12,15 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.example.fashionstoreapp.Activity.AddProductActivity;
+import com.example.fashionstoreapp.Activity.OrderActivity;
 import com.example.fashionstoreapp.Adapter.CategoryAdapter;
 import com.example.fashionstoreapp.Adapter.ImagePagerAdapter;
 import com.example.fashionstoreapp.Adapter.ProductAdapter;
@@ -28,6 +33,7 @@ import com.example.fashionstoreapp.Retrofit.ProductAPI;
 import com.example.fashionstoreapp.Somethings.ObjectSharedPreferences;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvHiName;
     private EditText etSearch;
     private ImageView ivAvatar, ivHome, ivUser, ivCart, ivHistory, ivSearch;
+    private Button addProduct;
     private User user;
     private boolean hasUser;
 
@@ -54,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler autoScrollHandler;
     private Runnable autoScrollRunnable;
     private static final long AUTO_SCROLL_INTERVAL = 2000; // 2 giây
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,8 +72,12 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this, "User", "MODE_PRIVATE", User.class
         );
         hasUser = user != null;
+        Log.d("MainActivity", "User loaded: " + (user != null ? user.toString() : "null"));
+        Log.d("MainActivity", "hasUser: " + hasUser + ", isAdmin: " + (user != null && user.isAdmin()));
+
         AnhXa();
         appBarClick();
+        setupAddProductClick();
         LoadUserInfor();
         ivSearchClick();
         initRecyclerViews();
@@ -87,21 +99,21 @@ public class MainActivity extends AppCompatActivity {
         // Initialize RecyclerView for New Products
         recyclerViewNewProductList = findViewById(R.id.view2);
         recyclerViewNewProductList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        newProductsAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser);
+        newProductsAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser, user != null && user.isAdmin());
         recyclerViewNewProductList.setAdapter(newProductsAdapter);
         Log.d("RecyclerView", "NewProducts adapter initialized with empty list");
 
         // Initialize RecyclerView for Best Sellers
         recyclerViewBestSellersList = findViewById(R.id.view3);
         recyclerViewBestSellersList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        bestSellersAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser);
+        bestSellersAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser, user != null && user.isAdmin());
         recyclerViewBestSellersList.setAdapter(bestSellersAdapter);
         Log.d("RecyclerView", "BestSellers adapter initialized with empty list");
 
-// In initRecyclerViews()
-        recyclerViewAllProductsList = findViewById(R.id.view4); // Replace with your actual ID
+        // Initialize RecyclerView for All Products
+        recyclerViewAllProductsList = findViewById(R.id.view4);
         recyclerViewAllProductsList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        allProductsAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser);
+        allProductsAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser, user != null && user.isAdmin());
         recyclerViewAllProductsList.setAdapter(allProductsAdapter);
         Log.d("RecyclerView", "AllProducts adapter initialized with empty list");
     }
@@ -216,11 +228,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     private void LoadUserInfor() {
         if (user != null) {
-            tvHiName.setText("Hi " + user.getUser_Name());
+            tvHiName.setText("Hi " + user.getUserName());
+            if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                Glide.with(this)
+                        .load(user.getAvatar())
+                        .into(ivAvatar);
+            }
+            if (user.isAdmin()) {
+                addProduct.setVisibility(View.VISIBLE); // Hiển thị addProduct nếu là admin
+            } else {
+                addProduct.setVisibility(View.INVISIBLE); // Ẩn addProduct nhưng giữ không gian nếu là user
+            }
         } else {
             tvHiName.setText("Hi Guest");
+            ivAvatar.setImageResource(R.drawable.avatar_admin);
+            addProduct.setVisibility(View.GONE); // Ẩn hoàn toàn addProduct nếu chưa đăng nhập
         }
     }
 
@@ -244,34 +269,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupViewPager() {
-        // Danh sách ảnh (ID tài nguyên)
         List<Integer> imageList = Arrays.asList(
                 R.drawable.banner,
                 R.drawable.banner2,
                 R.drawable.banner3
         );
 
-        // Thiết lập ViewPager2
         viewPager = findViewById(R.id.viewPager);
         viewPager.setAdapter(new ImagePagerAdapter(imageList));
 
-        // Kết nối TabLayout với ViewPager2
         tabLayout = findViewById(R.id.tabLayout);
         new TabLayoutMediator(tabLayout, viewPager,
                 (tab, position) -> {
-                    // Tùy chỉnh tab nếu cần (để trống vì chỉ cần dot indicator)
                 }).attach();
 
-        // Thiết lập auto-scroll
         autoScrollHandler = new Handler(Looper.getMainLooper());
         autoScrollRunnable = new Runnable() {
             @Override
             public void run() {
                 if (viewPager.getAdapter() != null) {
                     int totalItems = viewPager.getAdapter().getItemCount();
-                    int nextItem = (viewPager.getCurrentItem() + 1) % totalItems; // Quay lại đầu nếu đến cuối
-                    viewPager.setCurrentItem(nextItem, true); // Chuyển trang với hiệu ứng mượt
-                    autoScrollHandler.postDelayed(this, AUTO_SCROLL_INTERVAL); // Lặp lại sau 2 giây
+                    int nextItem = (viewPager.getCurrentItem() + 1) % totalItems;
+                    viewPager.setCurrentItem(nextItem, true);
+                    autoScrollHandler.postDelayed(this, AUTO_SCROLL_INTERVAL);
                 }
             }
         };
@@ -280,7 +300,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Bắt đầu auto-scroll khi Activity được hiển thị
         if (autoScrollHandler != null && autoScrollRunnable != null) {
             autoScrollHandler.postDelayed(autoScrollRunnable, AUTO_SCROLL_INTERVAL);
         }
@@ -289,7 +308,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Dừng auto-scroll khi Activity bị tạm dừng
         if (autoScrollHandler != null && autoScrollRunnable != null) {
             autoScrollHandler.removeCallbacks(autoScrollRunnable);
         }
@@ -297,8 +315,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void appBarClick() {
         ivHome.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, MainActivity.class));
-            finish();
+            Toast.makeText(this, "Bạn đang ở Trang chủ", Toast.LENGTH_SHORT).show();
         });
         ivUser.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, UserActivity.class));
@@ -314,6 +331,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setupAddProductClick() {
+        addProduct.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, AddProductActivity.class);
+            startActivity(intent);
+        });
+    }
+
     private void AnhXa() {
         tvHiName = findViewById(R.id.tvHiName);
         ivAvatar = findViewById(R.id.ivAvatar);
@@ -323,5 +347,6 @@ public class MainActivity extends AppCompatActivity {
         ivHistory = findViewById(R.id.ivHistory);
         etSearch = findViewById(R.id.etSearch);
         ivSearch = findViewById(R.id.ivSearch);
+        addProduct = findViewById(R.id.addProduct);
     }
 }
