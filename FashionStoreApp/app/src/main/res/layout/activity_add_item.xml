@@ -40,7 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Category"
+            android:text="Danh mục"
             android:textSize="16sp" />
 
         <Spinner
@@ -53,28 +53,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Product Name"
+            android:text="Tên sản phẩm"
             android:textSize="16sp" />
 
         <EditText
             android:id="@+id/productNameEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter product name" />
+            android:hint="Nhập tên sản phẩm" />
 
         <!-- Price -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Price"
+            android:text="Giá"
             android:textSize="16sp" />
 
         <EditText
             android:id="@+id/priceEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter price"
+            android:hint="Nhập giá tiền"
             android:inputType="numberDecimal" />
 
         <!-- Quantity -->
@@ -82,14 +82,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Quantity"
+            android:text="Số lượng"
             android:textSize="16sp" />
 
         <EditText
             android:id="@+id/quantityEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter quantity"
+            android:hint="Nhập số lượng"
             android:inputType="number" />
 
         <!-- Is Active -->
@@ -125,7 +125,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Product Images"
+            android:text="Hình ảnh sản phẩm"
             android:textSize="16sp" />
 
         <LinearLayout
@@ -149,6 +149,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp"
+                android:backgroundTint="#0066FF"
                 android:text="Add Image" />
         </LinearLayout>
 
@@ -157,7 +158,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Description"
+            android:text="Mô tả"
             android:textSize="16sp" />
 
         <EditText
@@ -165,7 +166,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="top"
-            android:hint="Enter description"
+            android:hint="Thêm mô tả"
             android:lines="3" />
 
         <Button
@@ -173,8 +174,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:backgroundTint="#00FF00"
-            android:text="Add Product"
+            android:backgroundTint="@drawable/button_background"
+            android:text="Thêm"
             android:textColor="#FFFFFF" />
     </LinearLayout>
 </ScrollView>

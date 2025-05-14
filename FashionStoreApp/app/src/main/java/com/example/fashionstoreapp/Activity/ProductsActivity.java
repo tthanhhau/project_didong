@@ -1,3 +1,4 @@
+
 package com.example.fashionstoreapp.Activity;
 
 import android.content.Intent;
@@ -18,9 +19,11 @@ import com.example.fashionstoreapp.Adapter.ProductAdapter;
 import com.example.fashionstoreapp.Model.Category;
 import com.example.fashionstoreapp.Model.Product;
 import com.example.fashionstoreapp.Model.ProductImage;
+import com.example.fashionstoreapp.Model.User;
 import com.example.fashionstoreapp.R;
 import com.example.fashionstoreapp.Retrofit.ProductAPI;
 import com.example.fashionstoreapp.Retrofit.ProductImageAPI;
+import com.example.fashionstoreapp.Somethings.ObjectSharedPreferences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,11 +39,21 @@ public class ProductsActivity extends AppCompatActivity {
     private TextView tvResult;
     private ImageView ivSearch, ivHome, ivUser, ivCart, ivHistory;
     private RecyclerView rcProduct;
+    private User user;
+    private boolean hasUser;
+
+    private static final String TAG = "ProductsActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_products);
+
+        // Load user data
+        user = ObjectSharedPreferences.getSavedObjectFromPreference(
+                this, "User", "MODE_PRIVATE", User.class
+        );
+        hasUser = user != null;
 
         initViews();
         setupAppBar();
@@ -64,10 +77,10 @@ public class ProductsActivity extends AppCompatActivity {
         rcProduct.setHasFixedSize(true);
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         rcProduct.setLayoutManager(layoutManager);
-        productAdapter = new ProductAdapter(new ArrayList<>(), this, true); // Truyền isAdmin
+        productAdapter = new ProductAdapter(new ArrayList<>(), this, hasUser, user != null && user.isAdmin());
         rcProduct.setAdapter(productAdapter);
         rcProduct.post(() -> {
-            Log.d("RecyclerView", "Adapter attached");
+            Log.d(TAG, "Product adapter attached with hasUser: " + hasUser + ", isAdmin: " + (user != null && user.isAdmin()));
             productAdapter.notifyDataSetChanged();
         });
     }
@@ -101,7 +114,7 @@ public class ProductsActivity extends AppCompatActivity {
             performSearch();
         } else {
             tvResult.setText("No data to display");
-            Log.w("ProductsActivity", "No category or search content provided");
+            Log.w(TAG, "No category or search content provided");
             fetchAllProducts();
         }
     }
@@ -115,14 +128,16 @@ public class ProductsActivity extends AppCompatActivity {
                     processProducts(products);
                 } else {
                     tvResult.setText("Failed to load products");
-                    Log.e("APIError", "Get all products response is null or unsuccessful: " + response.message());
+                    Log.e(TAG, "Get all products response is null or unsuccessful: " + response.message());
+                    Toast.makeText(ProductsActivity.this, "Error loading products", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<Product>> call, Throwable t) {
                 tvResult.setText("Failed to load products");
-                Log.e("APIError", "Get all products API failed: " + t.getMessage());
+                Log.e(TAG, "Get all products API failed: " + t.getMessage());
+                Toast.makeText(ProductsActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -130,7 +145,8 @@ public class ProductsActivity extends AppCompatActivity {
     private void loadProductCategory(Category category) {
         if (category == null) {
             tvResult.setText("Invalid category");
-            Log.e("ProductsActivity", "Category is null");
+            Log.e(TAG, "Category is null");
+            Toast.makeText(this, "Invalid category", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -145,8 +161,12 @@ public class ProductsActivity extends AppCompatActivity {
             final int[] loadedCount = {0};
 
             for (Product product : products) {
-                if (product == null || product.getProductName() == null || product.getProductImages() == null || product.getProductImages().isEmpty()) {
-                    Log.e("ProductsActivity", "Invalid product: " + (product != null ? "ID: " + product.getId() : "null"));
+                if (product == null || product.getProductName() == null || product.getId() == 0) {
+                    Log.w(TAG, "Invalid product: " + (product != null ? "ID: " + product.getId() : "null"));
+                    loadedCount[0]++;
+                    if (loadedCount[0] == total) {
+                        updateUIWithProducts(validProducts);
+                    }
                     continue;
                 }
 
@@ -157,8 +177,10 @@ public class ProductsActivity extends AppCompatActivity {
                         loadedCount[0]++;
                         if (response.isSuccessful() && response.body() != null) {
                             product.setProductImages(response.body());
+                            Log.d(TAG, "Loaded " + response.body().size() + " images for product ID: " + product.getId());
                         } else {
                             product.setProductImages(new ArrayList<>());
+                            Log.w(TAG, "No images for product ID: " + product.getId());
                         }
 
                         validProducts.add(product);
@@ -171,7 +193,7 @@ public class ProductsActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(Call<List<ProductImage>> call, Throwable t) {
                         loadedCount[0]++;
-                        Log.e("ImageLoad", "Failed to load image for product ID: " + product.getId(), t);
+                        Log.e(TAG, "Failed to load image for product ID: " + product.getId() + ": " + t.getMessage());
                         product.setProductImages(new ArrayList<>());
                         validProducts.add(product);
 
@@ -183,7 +205,8 @@ public class ProductsActivity extends AppCompatActivity {
             }
         } else {
             tvResult.setText("No products found");
-            Log.e("CategoryError", "Product list is null or empty");
+            Log.w(TAG, "Product list is null or empty");
+            Toast.makeText(this, "No products found", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -191,9 +214,9 @@ public class ProductsActivity extends AppCompatActivity {
         List<Product> filtered = new ArrayList<>();
         for (Product p : products) {
             if (p.getProductImages() != null && !p.getProductImages().isEmpty()) {
-                Log.d("ImageLoad", "Loaded image for: " + p.getProductName());
+                Log.d(TAG, "Loaded image for: " + p.getProductName());
             } else {
-                Log.w("ImageLoad", "No image for: " + p.getProductName());
+                Log.w(TAG, "No image for: " + p.getProductName());
             }
             filtered.add(p);
         }
@@ -207,7 +230,8 @@ public class ProductsActivity extends AppCompatActivity {
         String query = etSearch.getText().toString().trim();
         if (query.isEmpty()) {
             tvResult.setText("Please enter a search query");
-            Log.w("ProductsActivity", "Empty search query");
+            Log.w(TAG, "Empty search query");
+            Toast.makeText(this, "Please enter a search query", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -219,14 +243,16 @@ public class ProductsActivity extends AppCompatActivity {
                     processProducts(products);
                 } else {
                     tvResult.setText("No results found");
-                    Log.e("APIError", "Search response is null or unsuccessful: " + response.message());
+                    Log.e(TAG, "Search response is null or unsuccessful: " + response.message());
+                    Toast.makeText(ProductsActivity.this, "No results found", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<Product>> call, Throwable t) {
                 tvResult.setText("Failed to load products");
-                Log.e("APIError", "Search API failed: " + t.getMessage());
+                Log.e(TAG, "Search API failed: " + t.getMessage());
+                Toast.makeText(ProductsActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

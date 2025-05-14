@@ -39,7 +39,7 @@ public class UserController {
 	public ResponseEntity<User> Login(String id, String password) {
 		System.out.println(id);
 		User userFind = userService.findByIdAndRole(id,"user");
-		
+
 		if (userFind != null && userFind.getPassword() != null) {
 			String decodedValue = new String(Base64.getDecoder().decode(userFind.getPassword()));
 			System.out.println(userFind);
@@ -49,16 +49,16 @@ public class UserController {
 				return new ResponseEntity<>(userFind, HttpStatus.OK);
 			}
 		}
-		return new ResponseEntity<User>(HttpStatus.NOT_FOUND);		
+		return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
 
 	}
-	
-	
+
+
 	@GetMapping(path = "/loginAdmin")
 	public ResponseEntity<User> LoginAdmin(String id, String password) {
 		System.out.println(id);
 		User userFind = userService.findByIdAndRole(id,"admin");
-		
+
 		if (userFind != null && userFind.getPassword() != null) {
 			String decodedValue = new String(Base64.getDecoder().decode(userFind.getPassword()));
 			System.out.println(userFind);
@@ -68,10 +68,9 @@ public class UserController {
 				return new ResponseEntity<>(userFind, HttpStatus.OK);
 			}
 		}
-		return new ResponseEntity<User>(HttpStatus.NOT_FOUND);		
+		return new ResponseEntity<User>(HttpStatus.NOT_FOUND);
 
 	}
-
 	@PostMapping(path = "/signup", consumes = "application/x-www-form-urlencoded")
 	public ResponseEntity<User> SignUp(String username, String fullname, String email, String password) {
 		User user = userService.findByIdAndRole(username, "user");

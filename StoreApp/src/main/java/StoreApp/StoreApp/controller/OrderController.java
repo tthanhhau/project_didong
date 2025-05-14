@@ -117,4 +117,16 @@ public class OrderController {
 		}
 		return new ResponseEntity<>(listOrderDto, HttpStatus.OK);
 	}
+
+	@GetMapping(path = "/getAllOrder")
+	public ResponseEntity<List<OrderDto>> getAllOrder(){
+		List<Order> listOrder = orderService.findAll();
+		List<OrderDto> listOrderDto = new ArrayList<>();
+		for(Order o: listOrder) {
+			OrderDto orderDto = modelMapper.map(o, OrderDto.class);
+			System.out.println(orderDto.getId());
+			listOrderDto.add(orderDto);
+		}
+		return new ResponseEntity<>(listOrderDto, HttpStatus.OK);
+	}
 }

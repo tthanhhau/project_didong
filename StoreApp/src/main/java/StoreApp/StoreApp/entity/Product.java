@@ -68,10 +68,9 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<Cart> cart;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    private List<Rating> ratings;
 
-    
+    @OneToMany(mappedBy = "product")
+    @JsonBackReference("product-rating")
     public int getCategoryId() {
         return category != null ? category.getId() : 1;
     }

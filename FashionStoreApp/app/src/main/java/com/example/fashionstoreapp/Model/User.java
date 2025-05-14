@@ -3,11 +3,8 @@ package com.example.fashionstoreapp.Model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import org.jetbrains.annotations.Contract;
-
 import java.io.Serializable;
 import java.util.List;
-
 
 public class User implements Serializable {
 	@SerializedName("id")
@@ -16,7 +13,7 @@ public class User implements Serializable {
 
 	@SerializedName("login_type")
 	@Expose
-	private String login_Type;
+	private String loginType;
 
 	@SerializedName("role")
 	@Expose
@@ -28,7 +25,7 @@ public class User implements Serializable {
 
 	@SerializedName("user_name")
 	@Expose
-	private String user_Name;
+	private String userName;
 
 	@SerializedName("avatar")
 	@Expose
@@ -40,32 +37,53 @@ public class User implements Serializable {
 
 	@SerializedName("phone_number")
 	@Expose
-	private String phone_Number;
+	private String phoneNumber;
 
 	@SerializedName("address")
 	@Expose
 	private String address;
 
-//	@SerializedName("order")
-//	@Expose
+	@SerializedName("order")
+	@Expose
 	private List<Order> order;
 
-	//	@SerializedName("cart")
-//	@Expose
+	@SerializedName("cart")
+	@Expose
 	private List<Cart> cart;
 
-	private List<Object> rating; // Thêm để khớp với JSON
+	@SerializedName("rating")
+	@Expose
+	private List<Object> rating;
 
+	// Default constructor
 	public User() {
-
 	}
 
+	// Full constructor
+	public User(String id, String loginType, String role, String password, String userName,
+				String avatar, String email, String phoneNumber, String address,
+				List<Order> order, List<Cart> cart, List<Object> rating) {
+		this.id = id;
+		this.loginType = loginType;
+		this.role = role;
+		this.password = password;
+		this.userName = userName;
+		this.avatar = avatar;
+		this.email = email;
+		this.phoneNumber = phoneNumber;
+		this.address = address;
+		this.order = order;
+		this.cart = cart;
+		this.rating = rating;
+	}
+
+	// Getters
 	public String getId() {
 		return id;
 	}
 
-	public String getLogin_Type() {
-		return login_Type;
+	public String getLoginType() {
+		return loginType;
 	}
 
 	public String getRole() {
@@ -76,8 +94,8 @@ public class User implements Serializable {
 		return password;
 	}
 
-	public String getUser_Name() {
-		return user_Name;
+	public String getUserName() {
+		return userName;
 	}
 
 	public String getAvatar() {
@@ -88,8 +106,12 @@ public class User implements Serializable {
 		return email;
 	}
 
-	public String getPhone_Number() {
-		return phone_Number;
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public String getAddress() {
+		return address;
 	}
 
 	public List<Order> getOrder() {
@@ -100,12 +122,17 @@ public class User implements Serializable {
 		return cart;
 	}
 
+	public List<Object> getRating() {
+		return rating;
+	}
+
+	// Setters
 	public void setId(String id) {
 		this.id = id;
 	}
 
-	public void setLogin_Type(String login_Type) {
-		this.login_Type = login_Type;
+	public void setLoginType(String loginType) {
+		this.loginType = loginType;
 	}
 
 	public void setRole(String role) {
@@ -116,8 +143,8 @@ public class User implements Serializable {
 		this.password = password;
 	}
 
-	public void setUser_Name(String user_Name) {
-		this.user_Name = user_Name;
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 
 	public void setAvatar(String avatar) {
@@ -128,8 +155,12 @@ public class User implements Serializable {
 		this.email = email;
 	}
 
-	public void setPhone_Number(String phone_Number) {
-		this.phone_Number = phone_Number;
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
 	}
 
 	public void setOrder(List<Order> order) {
@@ -140,42 +171,30 @@ public class User implements Serializable {
 		this.cart = cart;
 	}
 
-	public String getAddress() {
-		return address;
+	public void setRating(List<Object> rating) {
+		this.rating = rating;
 	}
 
-	public void setAddress(String address) {
-		this.address = address;
-	}
-
-	public User(String id, String login_Type, String role, String password, String user_Name, String avatar, String email, String phone_Number, String address, List<Order> order, List<Cart> cart) {
-		this.id = id;
-		this.login_Type = login_Type;
-		this.role = role;
-		this.password = password;
-		this.user_Name = user_Name;
-		this.avatar = avatar;
-		this.email = email;
-		this.phone_Number = phone_Number;
-		this.address = address;
-		this.order = order;
-		this.cart = cart;
+	// Helper method to check admin status
+	public boolean isAdmin() {
+		return "admin".equalsIgnoreCase(role);
 	}
 
 	@Override
 	public String toString() {
 		return "User{" +
 				"id='" + id + '\'' +
-				", login_Type='" + login_Type + '\'' +
+				", loginType='" + loginType + '\'' +
 				", role='" + role + '\'' +
 				", password='" + password + '\'' +
-				", user_Name='" + user_Name + '\'' +
+				", userName='" + userName + '\'' +
 				", avatar='" + avatar + '\'' +
 				", email='" + email + '\'' +
-				", phone_Number='" + phone_Number + '\'' +
+				", phoneNumber='" + phoneNumber + '\'' +
 				", address='" + address + '\'' +
 				", order=" + order +
 				", cart=" + cart +
+				", rating=" + rating +
 				'}';
 	}
 }
