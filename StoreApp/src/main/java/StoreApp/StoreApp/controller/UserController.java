@@ -38,7 +38,7 @@ public class UserController {
 	@GetMapping(path = "/login")
 	public ResponseEntity<User> Login(String id, String password) {
 		System.out.println(id);
-		User userFind = userService.findByIdAndRole(id, "user");
+		User userFind = userService.findByIdAndRole(id,"user");
 		
 		if (userFind != null && userFind.getPassword() != null) {
 			String decodedValue = new String(Base64.getDecoder().decode(userFind.getPassword()));
@@ -48,12 +48,28 @@ public class UserController {
 				userFind.setPassword(decodedValue);
 				return new ResponseEntity<>(userFind, HttpStatus.OK);
 			}
-			else {
-				return null;
+		}
+		return new ResponseEntity<User>(HttpStatus.NOT_FOUND);		
+
+	}
+	
+	
+	@GetMapping(path = "/loginAdmin")
+	public ResponseEntity<User> LoginAdmin(String id, String password) {
+		System.out.println(id);
+		User userFind = userService.findByIdAndRole(id,"admin");
+		
+		if (userFind != null && userFind.getPassword() != null) {
+			String decodedValue = new String(Base64.getDecoder().decode(userFind.getPassword()));
+			System.out.println(userFind);
+			if (password.equals(decodedValue)) {
+//			userFind.setPassword(decodedValue);
+				userFind.setPassword(decodedValue);
+				return new ResponseEntity<>(userFind, HttpStatus.OK);
 			}
 		}
-		else
-			return new ResponseEntity<>(userFind, HttpStatus.OK);
+		return new ResponseEntity<User>(HttpStatus.NOT_FOUND);		
+
 	}
 
 	@PostMapping(path = "/signup", consumes = "application/x-www-form-urlencoded")
@@ -65,7 +81,7 @@ public class UserController {
 			String encodedValue = Base64.getEncoder().encodeToString(password.getBytes());
 			String avatar = "https://haycafe.vn/wp-content/uploads/2022/02/Avatar-trang-den.png";
 			User newUser = userService.saveUser(new User(username, "default", "user", encodedValue, fullname, avatar,
-					email, null, null, null, null,null));
+					email, null, null, null, null));
 			System.out.println(newUser);
 			return new ResponseEntity<>(newUser, HttpStatus.OK);
 		}
@@ -137,13 +153,13 @@ public class UserController {
 		}
 	}
 
-	@PostMapping(path = "google", consumes = "application/x-www-form-urlencoded")
-	public ResponseEntity<User> LoginWithGoogle(String id, String fullname, String email, String avatar) {
-		User user = userService.findByIdAndRole(id, "user");
-		if (user == null) {
-			user = userService
-					.saveUser(new User(id, "google", "user", null, fullname, avatar, email, null, null, null, null,null));
-		}
-		return new ResponseEntity<User>(user, HttpStatus.OK);
-	}
+//	@PostMapping(path = "google", consumes = "application/x-www-form-urlencoded")
+//	public ResponseEntity<User> LoginWithGoogle(String id, String fullname, String email, String avatar) {
+//		User user = userService.findByIdAndRole(id, "user");
+//		if (user == null) {
+//			user = userService
+//					.saveUser(new User(id, "google", "user", null, fullname, avatar, email, null, null, null, null));
+//		}
+//		return new ResponseEntity<User>(user, HttpStatus.OK);
+//	}
 }

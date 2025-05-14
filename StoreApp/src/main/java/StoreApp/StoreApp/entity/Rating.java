@@ -1,7 +1,10 @@
 package StoreApp.StoreApp.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,6 +18,10 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "rating")
+@JsonIdentityInfo(
+	    generator = ObjectIdGenerators.PropertyGenerator.class,
+	    property = "id"
+	)
 public class Rating {
     
     @Id
@@ -36,36 +43,9 @@ public class Rating {
     private String userId;
 
     @ManyToOne
-    @JoinColumn(name = "product_id")
+    @JoinColumn(name = "product_id", nullable = false)
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    @JsonBackReference("product-rating")
     private Product product;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
-    @JsonBackReference("user-rating")
-    private User user;
-
-    public Integer getProductId() {
-        return product != null ? product.getId() : productId;
-    }
-
-    public void setProductId(Integer productId) {
-        this.productId = productId;
-    }
-
-    public String getUserId() {
-        return user != null ? user.getId() : userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getUsername() {
-        return user != null ? user.getUser_Name() : null;
-    }
 }

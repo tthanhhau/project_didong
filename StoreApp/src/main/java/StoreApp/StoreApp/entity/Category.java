@@ -28,6 +28,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "category")
+@JsonIdentityInfo(
+	    generator = ObjectIdGenerators.PropertyGenerator.class,
+	    property = "id"
+	)
 public class Category {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,7 +44,5 @@ public class Category {
 	private String category_Image;
 	
 	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
-	@JsonBackReference("category-product")	
-
 	private List<Product> product;
 }
