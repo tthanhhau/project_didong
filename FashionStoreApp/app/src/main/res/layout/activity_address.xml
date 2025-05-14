@@ -28,7 +28,7 @@
             android:id="@+id/textView9"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Adding Shipping Address"
+            android:text="Thêm địa chỉ nhận hàng"
             android:textColor="#686767"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -68,9 +68,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                android:text="Full Name"
-                android:textColor="#9B9B9B"
-                android:textSize="14sp"
+                android:text="Tên"
+                android:textColor="#000000"
+                android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -115,9 +115,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                android:text="Phone Number"
-                android:textColor="#9B9B9B"
-                android:textSize="14sp"
+                android:text="Số điện thoại"
+                android:textColor="#000000"
+                android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -162,9 +162,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                android:text="Address"
-                android:textColor="#9B9B9B"
-                android:textSize="14sp"
+                android:text="Địa chỉ"
+                android:textColor="#000000"
+                android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -197,7 +197,7 @@
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="32dp"
             android:background="@drawable/button_background"
-            android:text="Save Address"
+            android:text="Lưu"
             android:textAllCaps="false"
             android:textColor="#ffffff"
             android:textSize="20sp"

@@ -84,7 +84,8 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @JsonBackReference ("cart-product")
     private List<Cart> cart;
-    
+
+
     @OneToMany(mappedBy = "product")
     @JsonBackReference("product-rating")
     private List<Rating> ratings;
