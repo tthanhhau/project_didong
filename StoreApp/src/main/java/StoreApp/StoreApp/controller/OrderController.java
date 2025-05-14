@@ -100,6 +100,8 @@ public class OrderController {
 		return new ResponseEntity<>(listOrderDto, HttpStatus.OK);
 	}
 	
+	
+	
 	@GetMapping(path = "/ordermethod")
 	public ResponseEntity<List<OrderDto>> getOrderByPaymentMethod(String user_id, String method){
 		System.out.println(user_id);
@@ -112,6 +114,18 @@ public class OrderController {
 		}
 		for(Order o: listOrder) {
 		System.out.println(o.getId());
+		}
+		return new ResponseEntity<>(listOrderDto, HttpStatus.OK);
+	}
+
+	@GetMapping(path = "/getAllOrder")
+	public ResponseEntity<List<OrderDto>> getAllOrder(){
+		List<Order> listOrder = orderService.findAll();
+		List<OrderDto> listOrderDto = new ArrayList<>();
+		for(Order o: listOrder) {
+			OrderDto orderDto = modelMapper.map(o, OrderDto.class);
+			System.out.println(orderDto.getId());
+			listOrderDto.add(orderDto);
 		}
 		return new ResponseEntity<>(listOrderDto, HttpStatus.OK);
 	}

@@ -11,7 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitService {
 
-    public static final String IPAddress = "192.168.1.13";
+    public static final String IPAddress = "192.168.1.9";
     private static final String CLOUDINARY_BASE_URL = "https://api.cloudinary.com/v1_1/da4f83k0v/";
     private static final String TAG = "RetrofitService";
 

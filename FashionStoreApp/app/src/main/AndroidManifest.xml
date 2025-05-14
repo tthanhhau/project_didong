@@ -33,6 +33,8 @@
         <activity android:name=".Activity.EditProfileActivity" android:exported="true"></activity>
         <activity android:name=".Activity.OrderActivity" android:exported="true"></activity>
         <activity android:name=".Activity.AdminActivity" android:exported="true"></activity>
+        <activity android:name=".Activity.LoginAdminActivity" android:exported="true"></activity>
+        <activity android:name=".Activity.AddProductActivity" android:exported="true"></activity>
 
         <activity
             android:name=".Activity.CheckOutActivity"
@@ -61,6 +63,8 @@
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
+
     </application>
+
 
 </manifest>

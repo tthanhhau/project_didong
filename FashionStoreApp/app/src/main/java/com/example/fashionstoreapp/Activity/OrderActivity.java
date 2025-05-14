@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,38 +33,53 @@ public class OrderActivity extends AppCompatActivity {
     ViewPager2 viewPager2;
     OrderFragmentAdapter orderFragmentAdapter;
     ImageView ivHome, ivUser, ivCart, ivHistory;
-
     ConstraintLayout clOrder, clEmptyOrder;
+    User loggedInUser;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_order);
         AnhXa();
         appBarClick();
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        orderFragmentAdapter = new OrderFragmentAdapter(fragmentManager, getLifecycle());
-        CheckEmpty();
-        viewPager2.setAdapter(orderFragmentAdapter);
-        tabLayout.addTab(tabLayout.newTab().setText("All Order"));
-        tabLayout.addTab(tabLayout.newTab().setText("Pay On Delivery"));
-        tabLayout.addTab(tabLayout.newTab().setText("Pay With ZaloPay"));
 
+        // Lấy thông tin người dùng đang đăng nhập
+        loggedInUser = ObjectSharedPreferences.getSavedObjectFromPreference(
+                OrderActivity.this, "User", "MODE_PRIVATE", User.class);
+
+        // Khởi tạo FragmentManager và Adapter
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Bundle bundle = new Bundle();
+        // Truyền thông tin quyền admin qua Bundle
+        bundle.putBoolean("isAdmin", loggedInUser != null && loggedInUser.isAdmin());
+        orderFragmentAdapter = new OrderFragmentAdapter(fragmentManager, getLifecycle(), bundle);
+        viewPager2.setAdapter(orderFragmentAdapter);
+
+        // Kiểm tra đơn hàng trống (chỉ áp dụng cho user)
+        CheckEmpty();
+
+        // Thiết lập TabLayout
+        tabLayout.addTab(tabLayout.newTab().setText("Tất cả đơn hàng"));
+        tabLayout.addTab(tabLayout.newTab().setText("Thanh toán khi nhận hàng"));
+        tabLayout.addTab(tabLayout.newTab().setText("Thanh toán bằng ZaloPay"));
+
+        // Sự kiện chọn tab
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 viewPager2.setCurrentItem(tab.getPosition());
             }
+
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
             }
         });
 
+        // Đồng bộ ViewPager2 với TabLayout
         viewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
@@ -73,22 +89,32 @@ public class OrderActivity extends AppCompatActivity {
     }
 
     private void CheckEmpty() {
-        User user = ObjectSharedPreferences.getSavedObjectFromPreference(OrderActivity.this, "User", "MODE_PRIVATE", User.class);
-        OrderAPI.orderAPI.getOrderByUserId(user.getId()).enqueue(new Callback<List<Order>>() {
+        if (loggedInUser == null || loggedInUser.isAdmin()) {
+            // Với admin hoặc không đăng nhập, không kiểm tra trống
+            clOrder.setVisibility(View.VISIBLE);
+            clEmptyOrder.setVisibility(View.GONE);
+            return;
+        }
+
+        // Kiểm tra đơn hàng của user
+        OrderAPI.orderAPI.getOrderByUserId(loggedInUser.getId()).enqueue(new Callback<List<Order>>() {
             @Override
             public void onResponse(Call<List<Order>> call, Response<List<Order>> response) {
-                if(response.body().isEmpty()){
+                if (response.body() == null || response.body().isEmpty()) {
                     clOrder.setVisibility(View.GONE);
                     clEmptyOrder.setVisibility(View.VISIBLE);
+                } else {
+                    clOrder.setVisibility(View.VISIBLE);
+                    clEmptyOrder.setVisibility(View.GONE);
                 }
             }
 
             @Override
             public void onFailure(Call<List<Order>> call, Throwable t) {
-
+                Log.e("APIError", "Không thể kiểm tra đơn hàng: " + t.getMessage());
+                Toast.makeText(OrderActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 
     private void appBarClick() {
@@ -104,7 +130,6 @@ public class OrderActivity extends AppCompatActivity {
             startActivity(new Intent(OrderActivity.this, CartActivity.class));
             finish();
         });
-
         ivHistory.setOnClickListener(v -> {
             startActivity(new Intent(OrderActivity.this, OrderActivity.class));
             finish();

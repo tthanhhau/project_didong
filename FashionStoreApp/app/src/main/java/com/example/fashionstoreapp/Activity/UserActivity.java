@@ -1,3 +1,4 @@
+
 package com.example.fashionstoreapp.Activity;
 
 import android.app.Dialog;
@@ -26,8 +27,6 @@ import com.example.fashionstoreapp.Somethings.ObjectSharedPreferences;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -133,7 +132,7 @@ public class UserActivity extends AppCompatActivity {
                 finish();
                 return;
             }
-            if (Objects.equals(user.getLogin_Type(), "google")) {
+            if (Objects.equals(user.getLoginType(), "google")) {
                 googleSignInClient.signOut().addOnCompleteListener(task -> {
                     ObjectSharedPreferences.saveObjectToSharedPreference(UserActivity.this, "User", "MODE_PRIVATE", null);
                     startActivity(new Intent(UserActivity.this, LoginActivity.class));
@@ -162,8 +161,7 @@ public class UserActivity extends AppCompatActivity {
                     user = response.body();
                     ObjectSharedPreferences.saveObjectToSharedPreference(UserActivity.this, "User", "MODE_PRIVATE", user);
 
-
-                    tvFullName.setText(user.getUser_Name() != null ? user.getUser_Name() : "N/A");
+                    tvFullName.setText(user.getUserName() != null ? user.getUserName() : "N/A");
                     tvId.setText(user.getId() != null ? user.getId() : "N/A");
                     tvTotalOrder.setText(user.getOrder() != null ? String.valueOf(user.getOrder().size()) : "0");
 
@@ -177,15 +175,22 @@ public class UserActivity extends AppCompatActivity {
                     NumberFormat en = NumberFormat.getInstance(localeEN);
                     tvTotalPrice.setText(en.format(totalPrice));
 
-                    tvPhone.setText(user.getPhone_Number() != null ? user.getPhone_Number() : "N/A");
+                    tvPhone.setText(user.getPhoneNumber() != null ? user.getPhoneNumber() : "N/A");
                     tvAddress.setText(user.getAddress() != null ? user.getAddress() : "N/A");
                     tvEmail.setText(user.getEmail() != null ? user.getEmail() : "N/A");
 
-                    // Kiểm tra login_type
-                    if (Objects.equals(user.getLogin_Type(), "google")) {
+                    // Kiểm tra loginType
+                    if (Objects.equals(user.getLoginType(), "google")) {
                         tvChangePassword.setVisibility(View.GONE);
                     } else {
                         tvChangePassword.setVisibility(View.VISIBLE);
+                    }
+
+                    // Load avatar
+                    if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                        Glide.with(UserActivity.this)
+                                .load(user.getAvatar())
+                                .into(ivAvatar);
                     }
                 } else {
                     Toast.makeText(UserActivity.this, "Không thể tải thông tin người dùng", Toast.LENGTH_SHORT).show();

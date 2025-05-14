@@ -19,7 +19,7 @@ import StoreApp.StoreApp.service.CartService;
 import StoreApp.StoreApp.service.CategoryService;
 import StoreApp.StoreApp.service.ProductImageService;
 import StoreApp.StoreApp.service.ProductService;
-
+import org.springframework.http.MediaType;
 @RestController
 public class ProductController {
 	@Autowired
@@ -48,15 +48,19 @@ public class ProductController {
 		List<Product> products = productService.findByProduct_NameContaining(searchContent);
 		return new ResponseEntity<>(products, HttpStatus.OK);
 	}
+	@GetMapping(path = "/getProductByCategoryID")
+	public ResponseEntity<List<Product>> getProductByCategoryID(int id){
+		List<Product> products = productService.getProductByCategoryID(id);
+		return new ResponseEntity<>(products, HttpStatus.OK);
+	}
 	@GetMapping(path = "/getAll")
 	public ResponseEntity<List<Product>> GetProducts(){
 		List<Product> products = productService.getAllProduct();
 		return new ResponseEntity<>(products, HttpStatus.OK);
 	}
-	@PostMapping("/add")
+	@PostMapping(path="/add", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> addProduct(@RequestBody Product product) {
 	    try {
-	        // Gán category từ categoryId
 	        Category category = categoryService.getCategoryById(product.getCategoryId());
 	        product.setCategory(category);
 

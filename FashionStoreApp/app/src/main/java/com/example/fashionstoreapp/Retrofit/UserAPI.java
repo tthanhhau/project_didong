@@ -24,6 +24,8 @@ public interface UserAPI {
     @GET("/login")
     Call<User> Login(@Query("id") String id, @Query("password") String password);
 
+    @GET("/loginAdmin")
+    Call<User> LoginAdmin(@Query("id") String id, @Query("password") String password);
     @FormUrlEncoded
     @POST("/signup")
     Call<User> SignUp(@Field("username") String username, @Field("fullname") String fullname, @Field("email") String email, @Field("password")String password);

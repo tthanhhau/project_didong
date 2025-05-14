@@ -76,26 +76,26 @@ public class AdminController {
 		return "signin-admin";
 	}
 
-	@PostMapping("/signin-admin")
-	public String SignInAdminHandel(@ModelAttribute("login-name") String login_name,
-			@ModelAttribute("pass") String pass, Model model) throws Exception {
-		User admin = userService.findByIdAndRole(login_name, "admin");
-		System.out.println(admin);
-		if (admin == null) {
-			session.setAttribute("err_sign_admin", "Username or Password is not correct!");
-			return "redirect:/signin-admin";
-		} else {
-			String decodedValue = new String(Base64.getDecoder().decode(admin.getPassword()));
-			if (!decodedValue.equals(pass)) {
-				session.setAttribute("err_sign_admin", "Username or Password is not correct!");
-				return "redirect:/signin-admin";
-			} else {
-				System.out.println(admin);
-				session.setAttribute("admin", admin);
-				return "redirect:/dashboard";
-			}
-		}
-	}
+//	@PostMapping("/signin-admin")
+//	public String SignInAdminHandel(@ModelAttribute("login-name") String login_name,
+//			@ModelAttribute("pass") String pass, Model model) throws Exception {
+//		User admin = userService.findByIdAndRole(login_name, "admin");
+//		System.out.println(admin);
+//		if (admin == null) {
+//			session.setAttribute("err_sign_admin", "Username or Password is not correct!");
+//			return "redirect:/signin-admin";
+//		} else {
+//			String decodedValue = new String(Base64.getDecoder().decode(admin.getPassword()));
+//			if (!decodedValue.equals(pass)) {
+//				session.setAttribute("err_sign_admin", "Username or Password is not correct!");
+//				return "redirect:/signin-admin";
+//			} else {
+//				System.out.println(admin);
+//				session.setAttribute("admin", admin);
+//				return "redirect:/dashboard";
+//			}
+//		}
+//	}
 
 	@GetMapping("/logout-admin")
 	public String LogOutAdmin(Model model) {
@@ -172,7 +172,6 @@ public class AdminController {
 		mailService.sendEmail(mail);
 		return "redirect:" + referer;
 	}
-
 	@GetMapping("/delete-order/{id}")
 	public String DeleteOrder(@PathVariable int id, Model model, HttpServletRequest request) throws Exception {
 		User admin = (User) session.getAttribute("admin");

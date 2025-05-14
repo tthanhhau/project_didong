@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,14 +51,16 @@ public class RatingController {
 	}
 
 	
-	@PostMapping("/addRating")
+	@PostMapping(value = "/addRating")
 	public ResponseEntity<?> addRating(@RequestBody Rating rating) {
 	    try {
+	        System.out.println("Received rating: " + rating);
 	        ratingService.addRating(rating);
 	        return ResponseEntity.ok(Map.of("success", true, "message", "Rating added successfully"));
 	    } catch (Exception e) {
+	        System.err.println("Error adding rating: " + e.getMessage());
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(Map.of("success", false, "message", "Failed to add rating"));
+	                .body(Map.of("success", false, "message", "Failed to add rating: " + e.getMessage()));
 	    }
 	}
 

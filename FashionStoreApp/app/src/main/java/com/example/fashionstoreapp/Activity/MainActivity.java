@@ -3,18 +3,26 @@ package com.example.fashionstoreapp.Activity;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.example.fashionstoreapp.Activity.AddProductActivity;
+import com.example.fashionstoreapp.Activity.OrderActivity;
 import com.example.fashionstoreapp.Adapter.CategoryAdapter;
+import com.example.fashionstoreapp.Adapter.ImagePagerAdapter;
 import com.example.fashionstoreapp.Adapter.ProductAdapter;
 import com.example.fashionstoreapp.Model.Category;
 import com.example.fashionstoreapp.Model.Product;
@@ -23,8 +31,11 @@ import com.example.fashionstoreapp.R;
 import com.example.fashionstoreapp.Retrofit.CategoryAPI;
 import com.example.fashionstoreapp.Retrofit.ProductAPI;
 import com.example.fashionstoreapp.Somethings.ObjectSharedPreferences;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
@@ -33,13 +44,23 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private CategoryAdapter categoryAdapter;
-    private ProductAdapter newProductsAdapter, bestSellersAdapter;
-    private RecyclerView recyclerViewCategoryList, recyclerViewNewProductList, recyclerViewBestSellersList;
+    private ProductAdapter newProductsAdapter, bestSellersAdapter, allProductsAdapter;
+    private RecyclerView recyclerViewCategoryList, recyclerViewNewProductList, recyclerViewBestSellersList, recyclerViewAllProductsList;
     private TextView tvHiName;
     private EditText etSearch;
     private ImageView ivAvatar, ivHome, ivUser, ivCart, ivHistory, ivSearch;
+    private Button addProduct;
     private User user;
     private boolean hasUser;
+
+    // ViewPager2 and TabLayout
+    ViewPager2 viewPager;
+    TabLayout tabLayout;
+
+    // Auto-scroll
+    private Handler autoScrollHandler;
+    private Runnable autoScrollRunnable;
+    private static final long AUTO_SCROLL_INTERVAL = 2000; // 2 giây
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,14 +72,20 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this, "User", "MODE_PRIVATE", User.class
         );
         hasUser = user != null;
+        Log.d("MainActivity", "User loaded: " + (user != null ? user.toString() : "null"));
+        Log.d("MainActivity", "hasUser: " + hasUser + ", isAdmin: " + (user != null && user.isAdmin()));
+
         AnhXa();
         appBarClick();
+        setupAddProductClick();
         LoadUserInfor();
         ivSearchClick();
         initRecyclerViews();
         LoadCategories();
         LoadNewProducts();
         LoadBestSellers();
+        LoadAllProducts();
+        setupViewPager();
     }
 
     private void initRecyclerViews() {
@@ -72,16 +99,23 @@ public class MainActivity extends AppCompatActivity {
         // Initialize RecyclerView for New Products
         recyclerViewNewProductList = findViewById(R.id.view2);
         recyclerViewNewProductList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        newProductsAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser);
+        newProductsAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser, user != null && user.isAdmin());
         recyclerViewNewProductList.setAdapter(newProductsAdapter);
         Log.d("RecyclerView", "NewProducts adapter initialized with empty list");
 
         // Initialize RecyclerView for Best Sellers
         recyclerViewBestSellersList = findViewById(R.id.view3);
         recyclerViewBestSellersList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        bestSellersAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser);
+        bestSellersAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser, user != null && user.isAdmin());
         recyclerViewBestSellersList.setAdapter(bestSellersAdapter);
         Log.d("RecyclerView", "BestSellers adapter initialized with empty list");
+
+        // Initialize RecyclerView for All Products
+        recyclerViewAllProductsList = findViewById(R.id.view4);
+        recyclerViewAllProductsList.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        allProductsAdapter = new ProductAdapter(new ArrayList<>(), MainActivity.this, hasUser, user != null && user.isAdmin());
+        recyclerViewAllProductsList.setAdapter(allProductsAdapter);
+        Log.d("RecyclerView", "AllProducts adapter initialized with empty list");
     }
 
     private void LoadCategories() {
@@ -168,11 +202,50 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void LoadAllProducts() {
+        ProductAPI.productApi.getProducts().enqueue(new Callback<List<Product>>() {
+            @Override
+            public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Product> allProductsList = response.body();
+                    Log.d("APIResponse", "All Products loaded: " + allProductsList.size() + " items");
+                    allProductsAdapter.updateProducts(allProductsList);
+                    recyclerViewAllProductsList.post(() -> {
+                        Log.d("RecyclerView", "AllProducts adapter updated with " + allProductsList.size() + " items");
+                        allProductsAdapter.notifyDataSetChanged();
+                    });
+                    Toast.makeText(MainActivity.this, "Loaded all products", Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.e("APIError", "Get All Products response is null or unsuccessful: " + response.message());
+                    Toast.makeText(MainActivity.this, "Error loading all products", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Product>> call, Throwable t) {
+                Log.e("APIError", "Call API Get All Products fail: " + t.getMessage());
+                Toast.makeText(MainActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void LoadUserInfor() {
         if (user != null) {
-            tvHiName.setText("Hi " + user.getUser_Name());
+            tvHiName.setText("Hi " + user.getUserName());
+            if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                Glide.with(this)
+                        .load(user.getAvatar())
+                        .into(ivAvatar);
+            }
+            if (user.isAdmin()) {
+                addProduct.setVisibility(View.VISIBLE); // Hiển thị addProduct nếu là admin
+            } else {
+                addProduct.setVisibility(View.INVISIBLE); // Ẩn addProduct nhưng giữ không gian nếu là user
+            }
         } else {
             tvHiName.setText("Hi Guest");
+            ivAvatar.setImageResource(R.drawable.avatar_admin);
+            addProduct.setVisibility(View.GONE); // Ẩn hoàn toàn addProduct nếu chưa đăng nhập
         }
     }
 
@@ -195,10 +268,54 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setupViewPager() {
+        List<Integer> imageList = Arrays.asList(
+                R.drawable.banner,
+                R.drawable.banner2,
+                R.drawable.banner3
+        );
+
+        viewPager = findViewById(R.id.viewPager);
+        viewPager.setAdapter(new ImagePagerAdapter(imageList));
+
+        tabLayout = findViewById(R.id.tabLayout);
+        new TabLayoutMediator(tabLayout, viewPager,
+                (tab, position) -> {
+                }).attach();
+
+        autoScrollHandler = new Handler(Looper.getMainLooper());
+        autoScrollRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (viewPager.getAdapter() != null) {
+                    int totalItems = viewPager.getAdapter().getItemCount();
+                    int nextItem = (viewPager.getCurrentItem() + 1) % totalItems;
+                    viewPager.setCurrentItem(nextItem, true);
+                    autoScrollHandler.postDelayed(this, AUTO_SCROLL_INTERVAL);
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (autoScrollHandler != null && autoScrollRunnable != null) {
+            autoScrollHandler.postDelayed(autoScrollRunnable, AUTO_SCROLL_INTERVAL);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (autoScrollHandler != null && autoScrollRunnable != null) {
+            autoScrollHandler.removeCallbacks(autoScrollRunnable);
+        }
+    }
+
     private void appBarClick() {
         ivHome.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, MainActivity.class));
-            finish();
+            Toast.makeText(this, "Bạn đang ở Trang chủ", Toast.LENGTH_SHORT).show();
         });
         ivUser.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, UserActivity.class));
@@ -214,6 +331,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setupAddProductClick() {
+        addProduct.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, AddProductActivity.class);
+            startActivity(intent);
+        });
+    }
+
     private void AnhXa() {
         tvHiName = findViewById(R.id.tvHiName);
         ivAvatar = findViewById(R.id.ivAvatar);
@@ -223,5 +347,6 @@ public class MainActivity extends AppCompatActivity {
         ivHistory = findViewById(R.id.ivHistory);
         etSearch = findViewById(R.id.etSearch);
         ivSearch = findViewById(R.id.ivSearch);
+        addProduct = findViewById(R.id.addProduct);
     }
 }

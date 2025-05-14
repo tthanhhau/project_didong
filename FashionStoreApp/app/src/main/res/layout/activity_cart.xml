@@ -67,8 +67,9 @@
             android:layout_marginTop="8dp"
             android:fontFamily="@font/metrophobic"
             android:paddingStart="16dp"
-            android:text="My Cart"
-            android:textAlignment="viewStart"
+            android:text="Giỏ hàng của tôi"
+            android:textAlignment="center"
+            android:gravity="center"
             android:textColor="#373b54"
             android:textSize="25sp"
             android:textStyle="bold"
@@ -76,6 +77,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:layout_weight="0.5" />
+
 
         <ScrollView
             android:id="@+id/scrollView2"
@@ -132,7 +134,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Total:"
+                    android:text="Tổng tiền:"
                     android:textColor="#373b54"
                     android:textSize="25sp"
                     android:textStyle="bold" />
@@ -154,8 +156,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:layout_margin="16dp"
-            android:background="#ff4627"
-            android:text="Check Out"
+            android:background="@drawable/button_background"
+            android:text="Mua hàng"
             android:textAllCaps="false"
             android:textColor="#ffffff"
             android:textSize="20sp"

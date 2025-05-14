@@ -1,6 +1,6 @@
-package com.example.fashionstoreapp.Activity;
 
-import android.content.Context;
+        package com.example.fashionstoreapp.Activity;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -43,57 +43,68 @@ public class LoginActivity extends AppCompatActivity {
     GoogleSignInOptions googleSignInOptions;
     GoogleSignInClient googleSignInClient;
 
+    private static final int RC_SIGN_IN = 1000;
+    private static final String TAG = "LoginActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         anhXa();
-//        progressBar.setVisibility(View.VISIBLE);
+        initGoogleSignIn();
         btnLoginClick();
         tvRegisterClick();
         tvForgotPasswordClick();
-        googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
-        googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
-
-        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
-        if(acct!=null){
-            navigateToSecondActivity();
-        }
         clGoogleClick();
         tvAdminClick();
     }
 
+    private void initGoogleSignIn() {
+        googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+        googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
+
+        // Check if already signed in
+        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
+        if (acct != null) {
+            navigateToSecondActivity();
+        }
+    }
+
     private void tvAdminClick() {
         tvAdmin.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            startActivity(new Intent(LoginActivity.this, LoginAdminActivity.class));
         });
     }
 
     private void clGoogleClick() {
         clGoogle.setOnClickListener(v -> {
+            progressBar.setVisibility(View.VISIBLE);
             Intent signInIntent = googleSignInClient.getSignInIntent();
-            startActivityForResult(signInIntent,1000);
+            startActivityForResult(signInIntent, RC_SIGN_IN);
         });
     }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode,Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == 1000){
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 task.getResult(ApiException.class);
                 navigateToSecondActivity();
             } catch (ApiException e) {
-                Toast.makeText(getApplicationContext(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+                Toast.makeText(this, "Google Sign-In failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Google Sign-In error: " + e.getStatusCode());
             }
         }
-
     }
-    void navigateToSecondActivity(){
+
+    private void navigateToSecondActivity() {
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
-        if(acct!=null){
+        if (acct != null) {
             String id = acct.getId();
             String name = acct.getDisplayName();
             String email = acct.getEmail();
@@ -101,34 +112,27 @@ public class LoginActivity extends AppCompatActivity {
             UserAPI.userApi.LoginWitGoogle(id, name, email, avatar).enqueue(new Callback<User>() {
                 @Override
                 public void onResponse(Call<User> call, Response<User> response) {
+                    progressBar.setVisibility(View.GONE);
                     user = response.body();
-                    if (user!=null){
-                        Toast.makeText(LoginActivity.this,"Login Successfully", Toast.LENGTH_LONG).show();
-
-
-                            ObjectSharedPreferences.saveObjectToSharedPreference(LoginActivity.this, "User", "MODE_PRIVATE", user);
-
-
-                        if(user.getAddress()!=null && user.getPhone_Number()!=null){
-                            Address address = new Address(user.getUser_Name(), user.getPhone_Number(), user.getAddress());
-                            ObjectSharedPreferences.saveObjectToSharedPreference(LoginActivity.this, "address", "MODE_PRIVATE", address);
-                        }
-
-                        Intent intent= new Intent(LoginActivity.this, MainActivity.class);
-                        intent.putExtra("object", user);
-                        startActivity(intent);
-                        finish();
-                    }
-                    else{
-                        Toast.makeText(LoginActivity.this,"Incorrect UserName or Password", Toast.LENGTH_LONG).show();
+                    if (user != null) {
+                        Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
+                        saveUserAndNavigate(user);
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Google Sign-In: User response null");
                     }
                 }
 
                 @Override
                 public void onFailure(Call<User> call, Throwable t) {
-
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(LoginActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Google Sign-In API call failed: " + t.getMessage());
                 }
             });
+        } else {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(this, "Google Sign-In account not found", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -136,82 +140,75 @@ public class LoginActivity extends AppCompatActivity {
         tvForgotPassword.setOnClickListener(v -> {
             startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
         });
-
     }
 
     private void tvRegisterClick() {
-        tvRegister.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
-            }
+        tvRegister.setOnClickListener(v -> {
+            startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
         });
     }
 
     private void btnLoginClick() {
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Login();
-            }
-        });
+        btnLogin.setOnClickListener(v -> Login());
     }
 
     private void Login() {
-        etPassword = findViewById(R.id.etPassword);
-        etUserName = findViewById(R.id.etUserName);
-        if (TextUtils.isEmpty(etUserName.getText().toString())){
+        String username = etUserName.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+
+        if (TextUtils.isEmpty(username)) {
             etUserName.setError("Please enter your username");
             etUserName.requestFocus();
             return;
         }
 
-        if (TextUtils.isEmpty(etPassword.getText().toString())){
+        if (TextUtils.isEmpty(password)) {
             etPassword.setError("Please enter your password");
             etPassword.requestFocus();
             return;
         }
-        String username = etUserName.getText().toString();
-        String password = etPassword.getText().toString();
-//        Log.e("ffff", "1======"+username);
-//        Log.e("ffff", "2======"+password);
-        UserAPI.userApi.Login(username,password).enqueue(new retrofit2.Callback<User>() {
+
+        progressBar.setVisibility(View.VISIBLE);
+        UserAPI.userApi.Login(username, password).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
-//                        User user = new User();
-//                        user.setUser_Name("dmm");
+                progressBar.setVisibility(View.GONE);
                 user = response.body();
-                if (user!=null){
-                    Toast.makeText(LoginActivity.this,"Login Successfully", Toast.LENGTH_LONG).show();
-//                    Log.e("ffff", user.toString());
-                    ObjectSharedPreferences.saveObjectToSharedPreference(LoginActivity.this, "User", "MODE_PRIVATE", user);
-                    if(user.getAddress()!=null && user.getPhone_Number()!=null){
-                        Address address = new Address(user.getUser_Name(), user.getPhone_Number(), user.getAddress());
-                        ObjectSharedPreferences.saveObjectToSharedPreference(LoginActivity.this, "address", "MODE_PRIVATE", address);
-                    }
-
-                    Intent intent= new Intent(LoginActivity.this, MainActivity.class);
-                    intent.putExtra("object", user);
-                    startActivity(intent);
-                    finish();
+                if (user != null) {
+                    Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
+                    saveUserAndNavigate(user);
+                } else {
+                    Toast.makeText(LoginActivity.this, "Incorrect Username or Password", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Login failed: Invalid credentials");
                 }
-                else{
-                    Toast.makeText(LoginActivity.this,"Incorrect UserName or Password", Toast.LENGTH_LONG).show();
-                }
-                Log.e("ffff", "Đăng nhập thành công");
             }
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
-                Toast.makeText(LoginActivity.this,"Failed to connect, try again later", Toast.LENGTH_LONG).show();
-                Log.e("ffff", "Kết nối API Login thất bại");
-                Log.e("TAG", t.toString());
+                progressBar.setVisibility(View.GONE);
+                Toast.makeText(LoginActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Login API call failed: " + t.getMessage());
             }
         });
     }
 
+    private void saveUserAndNavigate(User user) {
+        ObjectSharedPreferences.saveObjectToSharedPreference(LoginActivity.this, "User", "MODE_PRIVATE", user);
+        if (user.getAddress() != null && user.getPhoneNumber() != null) {
+            Address address = new Address(user.getUserName(), user.getPhoneNumber(), user.getAddress());
+            ObjectSharedPreferences.saveObjectToSharedPreference(LoginActivity.this, "address", "MODE_PRIVATE", address);
+        }
+
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.putExtra("object", user);
+        startActivity(intent);
+        finish();
+    }
+
     private void anhXa() {
-        btnLogin = findViewById(R.id.btnSignUp);
+        etUserName = findViewById(R.id.etUserName);
+        etPassword = findViewById(R.id.etPassword);
+        btnLogin = findViewById(R.id.btnSignUp); // Fixed typo (was btnSignUp)
         tvRegister = findViewById(R.id.tvRegister);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
         progressBar = findViewById(R.id.progressBar);

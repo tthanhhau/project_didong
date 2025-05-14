@@ -1,4 +1,4 @@
-package com.example.fashionstoreapp.Adapter;
+        package com.example.fashionstoreapp.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -41,14 +41,17 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
     private final Context context;
     private final boolean hasUser;
+    private final boolean isAdmin; // Theo dõi trạng thái admin
     private final List<Product> products;
     private final ProductImageAPI productImageAPI;
 
-    public ProductAdapter(List<Product> products, Context context, boolean hasUser) {
+    public ProductAdapter(List<Product> products, Context context, boolean hasUser, boolean isAdmin) {
         this.products = (products != null) ? new ArrayList<>(products) : new ArrayList<>();
         this.context = context;
         this.hasUser = hasUser;
+        this.isAdmin = isAdmin;
         this.productImageAPI = new RetrofitService().getRetrofit().create(ProductImageAPI.class);
+        Log.d("ProductAdapter", "Constructor called - isAdmin: " + isAdmin); // Log giá trị isAdmin khi khởi tạo
     }
 
     public void updateProducts(List<Product> newProducts) {
@@ -80,6 +83,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             holder.title.setText("Unknown Product");
             holder.fee.setText("N/A");
             holder.addBtn.setVisibility(View.GONE);
+            holder.deleteBtn.setVisibility(View.GONE);
             Log.e("ProductAdapter", "Product is null at position: " + position);
             return;
         }
@@ -88,12 +92,12 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         String productName = product.getProductName();
         holder.title.setText(productName != null ? productName : "Unknown Product");
 
-        // Giá sản phẩm (format theo locale)
+        // Giá sản phẩm (format theo locale Việt Nam)
         String priceText = NumberFormat.getInstance(new Locale("vi", "VN")).format(product.getPrice()) + " ₫";
         holder.fee.setText(priceText);
 
         // Hình ảnh sản phẩm
-        holder.ivImage.setImageDrawable(null); // Clear hình cũ
+        holder.ivImage.setImageDrawable(null); // Clear hình cũ để tránh lỗi hiển thị
         productImageAPI.getImageByProduct(product.getId()).enqueue(new Callback<List<ProductImage>>() {
             @Override
             public void onResponse(Call<List<ProductImage>> call, Response<List<ProductImage>> response) {
@@ -101,26 +105,41 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                     String imageUrl = response.body().get(0).getImageUrl();
                     Glide.with(context)
                             .load(imageUrl)
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-
+                            .diskCacheStrategy(DiskCacheStrategy.ALL) // Cache hình ảnh
+                            .placeholder(R.drawable.placeholder_image) // Hình placeholder trong khi tải
+                            .error(R.drawable.error_image) // Hình khi tải lỗi
                             .into(holder.ivImage);
                 } else {
                     Log.w("ProductAdapter", "No images for product ID: " + product.getId());
+                    holder.ivImage.setImageResource(R.drawable.placeholder_image); // Hiển thị placeholder nếu không có ảnh
                 }
             }
 
             @Override
             public void onFailure(Call<List<ProductImage>> call, Throwable t) {
                 Log.e("ProductAdapter", "Failed to load image for product ID: " + product.getId() + ": " + t.getMessage());
+                holder.ivImage.setImageResource(R.drawable.error_image); // Hiển thị lỗi nếu tải thất bại
             }
         });
 
-        // Nút thêm giỏ hàng
-        if (hasUser) {
-            holder.addBtn.setVisibility(View.VISIBLE);
-            holder.addBtn.setOnClickListener(v -> addToCart(product));
+        // Điều khiển hiển thị addBtn và deleteBtn
+        Log.d("ProductAdapter", "onBindViewHolder - isAdmin: " + isAdmin + ", position: " + position); // Log để debug
+        if (isAdmin) {
+            holder.addBtn.setVisibility(View.GONE); // Ẩn icon_add_to_cart khi là admin
+            holder.deleteBtn.setVisibility(View.VISIBLE); // Hiển thị icon_trash khi là admin
         } else {
-            holder.addBtn.setVisibility(View.GONE);
+            holder.addBtn.setVisibility(hasUser ? View.VISIBLE : View.GONE); // Hiển thị icon_add_to_cart nếu có user
+            holder.deleteBtn.setVisibility(View.GONE); // Ẩn icon_trash khi không phải admin
+        }
+
+        // Sự kiện click cho addBtn
+        holder.addBtn.setOnClickListener(v -> addToCart(product));
+
+        // Sự kiện click cho deleteBtn
+        if (isAdmin) {
+            holder.deleteBtn.setOnClickListener(v -> deleteProduct(product, position));
+        } else {
+            holder.deleteBtn.setOnClickListener(null); // Xóa listener nếu không phải admin để tránh xung đột
         }
 
         // Click item để xem chi tiết
@@ -142,9 +161,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             @Override
             public void onResponse(@NonNull Call<Cart> call, @NonNull Response<Cart> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Toast.makeText(context, "Đã thêm vào giỏ hàng", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Đã thêm " + product.getProductName() + " vào giỏ hàng", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(context, "Không thể thêm vào giỏ", Toast.LENGTH_SHORT).show();
+                    Log.w("ProductAdapter", "Add to cart failed: " + response.code() + " - " + response.message());
                 }
             }
 
@@ -157,6 +177,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     }
 
     public void deleteProduct(Product product, int position) {
+        if (!isAdmin) return; // Đảm bảo chỉ admin mới có thể xóa
+
         ProductAPI.productApi.removeProduct(product.getId()).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
@@ -164,12 +186,13 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                     products.remove(position);
                     notifyItemRemoved(position);
                     notifyItemRangeChanged(position, products.size());
-                    Toast.makeText(context, "Đã xóa sản phẩm", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Đã xóa sản phẩm " + product.getProductName(), Toast.LENGTH_SHORT).show();
                 } else {
                     String msg = (response.body() != null && response.body().get("message") != null)
                             ? response.body().get("message").toString()
                             : "Xóa thất bại";
                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+                    Log.w("ProductAdapter", "Delete failed: " + response.code() + " - " + msg);
                 }
             }
 
@@ -188,7 +211,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
     public static class ProductViewHolder extends RecyclerView.ViewHolder {
         TextView title, fee;
-        ImageView ivImage, addBtn;
+        ImageView ivImage, addBtn, deleteBtn;
 
         public ProductViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -196,6 +219,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             fee = itemView.findViewById(R.id.fee);
             ivImage = itemView.findViewById(R.id.ivImage);
             addBtn = itemView.findViewById(R.id.addBtn);
+            deleteBtn = itemView.findViewById(R.id.deleteBtn);
         }
     }
 }

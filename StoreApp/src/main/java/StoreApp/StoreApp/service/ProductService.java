@@ -32,6 +32,7 @@ public interface ProductService {
 
 	List<Product> findTop4ProductByCategory_id(int name);
 	
+	List<Product> getProductByCategoryID(int id);
 
 	
 //	Product getProductByCart_id(int cart_id);

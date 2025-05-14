@@ -25,5 +25,7 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
                    "  AND od.product_id = :productId) AS has_purchased" , 
            nativeQuery = true)
     List<Object[]> checkPurchaseAndRatingNative(@Param("userId") String userId, @Param("productId") Integer productId);
+    
+
 }
 
