@@ -1,4 +1,3 @@
-
 package com.example.fashionstoreapp.Activity;
 
 import android.content.Intent;
@@ -9,11 +8,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.fashionstoreapp.Activity.MainActivity;
 import com.example.fashionstoreapp.Model.Address;
 import com.example.fashionstoreapp.Model.User;
 import com.example.fashionstoreapp.R;
@@ -31,6 +30,7 @@ public class LoginAdminActivity extends AppCompatActivity {
 
     private EditText etAdminId, etAdminPassword;
     private Button btnAdminLogin;
+    private TextView tvBackToLogin;
     private ProgressBar progressBar;
     private User user;
 
@@ -49,14 +49,40 @@ public class LoginAdminActivity extends AppCompatActivity {
         etAdminId = findViewById(R.id.edtUsername);
         etAdminPassword = findViewById(R.id.edtPassword);
         btnAdminLogin = findViewById(R.id.btnLogin);
+        //tvBackToLogin = findViewById(R.id.tvBackToLogin);
         progressBar = findViewById(R.id.progressBar);
+
+        // Kiểm tra null để debug
+        if (etAdminId == null) Log.e(TAG, "etAdminId is null. Check R.id.etAdminId in activity_login_admin.xml");
+        if (etAdminPassword == null) Log.e(TAG, "etAdminPassword is null. Check R.id.etAdminPassword in activity_login_admin.xml");
+        if (btnAdminLogin == null) Log.e(TAG, "btnAdminLogin is null. Check R.id.btnAdminLogin in activity_login_admin.xml");
+        if (tvBackToLogin == null) Log.e(TAG, "tvBackToLogin is null. Check R.id.tvBackToLogin in activity_login_admin.xml");
+        if (progressBar == null) Log.e(TAG, "progressBar is null. Check R.id.progressBar in activity_login_admin.xml");
     }
 
     private void setupListeners() {
-        btnAdminLogin.setOnClickListener(v -> loginAdmin());
+        if (btnAdminLogin != null) {
+            btnAdminLogin.setOnClickListener(v -> loginAdmin());
+        } else {
+            Log.e(TAG, "btnAdminLogin is null. Cannot set OnClickListener");
+            Toast.makeText(this, "Error: Login button not found", Toast.LENGTH_LONG).show();
+        }
+        if (tvBackToLogin != null) {
+            tvBackToLogin.setOnClickListener(v -> {
+                startActivity(new Intent(LoginAdminActivity.this, LoginActivity.class));
+                finish();
+            });
+        } else {
+            Log.e(TAG, "tvBackToLogin is null. Cannot set OnClickListener");
+            Toast.makeText(this, "Error: Back to Login link not found", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void loginAdmin() {
+        if (etAdminId == null || etAdminPassword == null) {
+            Toast.makeText(this, "Error: Admin ID or Password field not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
         String adminId = etAdminId.getText().toString().trim();
         String password = etAdminPassword.getText().toString().trim();
 
@@ -83,6 +109,10 @@ public class LoginAdminActivity extends AppCompatActivity {
                 }
                 if (response.isSuccessful() && response.body() != null) {
                     user = response.body();
+                    if (user.getRole() == null) {
+                        user.setRole("admin");
+                    }
+                    Log.d(TAG, "Admin login: " + user.toString());
                     Toast.makeText(LoginAdminActivity.this, "Đăng nhập admin thành công", Toast.LENGTH_SHORT).show();
                     saveUserAndNavigate(user);
                 } else {

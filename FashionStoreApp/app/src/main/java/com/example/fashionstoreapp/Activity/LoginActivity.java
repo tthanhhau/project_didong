@@ -1,5 +1,4 @@
-
-        package com.example.fashionstoreapp.Activity;
+package com.example.fashionstoreapp.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -65,7 +64,6 @@ public class LoginActivity extends AppCompatActivity {
                 .build();
         googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
 
-        // Check if already signed in
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
         if (acct != null) {
             navigateToSecondActivity();
@@ -73,17 +71,30 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void tvAdminClick() {
-        tvAdmin.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, LoginAdminActivity.class));
-        });
+        if (tvAdmin != null) {
+            tvAdmin.setOnClickListener(v -> {
+                Log.d(TAG, "Navigating to LoginAdminActivity");
+                startActivity(new Intent(LoginActivity.this, LoginAdminActivity.class));
+            });
+        } else {
+            Log.e(TAG, "tvAdmin is null. Check R.id.tvAdmin in activity_login.xml");
+            Toast.makeText(this, "Error: Admin link not found", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void clGoogleClick() {
-        clGoogle.setOnClickListener(v -> {
-            progressBar.setVisibility(View.VISIBLE);
-            Intent signInIntent = googleSignInClient.getSignInIntent();
-            startActivityForResult(signInIntent, RC_SIGN_IN);
-        });
+        if (clGoogle != null) {
+            clGoogle.setOnClickListener(v -> {
+                if (progressBar != null) {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
+                Intent signInIntent = googleSignInClient.getSignInIntent();
+                startActivityForResult(signInIntent, RC_SIGN_IN);
+            });
+        } else {
+            Log.e(TAG, "clGoogle is null. Check R.id.clGoogle in activity_login.xml");
+            Toast.makeText(this, "Error: Google Sign-In button not found", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -95,7 +106,9 @@ public class LoginActivity extends AppCompatActivity {
                 task.getResult(ApiException.class);
                 navigateToSecondActivity();
             } catch (ApiException e) {
-                progressBar.setVisibility(View.GONE);
+                if (progressBar != null) {
+                    progressBar.setVisibility(View.GONE);
+                }
                 Toast.makeText(this, "Google Sign-In failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "Google Sign-In error: " + e.getStatusCode());
             }
@@ -108,13 +121,20 @@ public class LoginActivity extends AppCompatActivity {
             String id = acct.getId();
             String name = acct.getDisplayName();
             String email = acct.getEmail();
-            String avatar = String.valueOf(acct.getPhotoUrl());
+            String avatar = acct.getPhotoUrl() != null ? acct.getPhotoUrl().toString() : null;
             UserAPI.userApi.LoginWitGoogle(id, name, email, avatar).enqueue(new Callback<User>() {
                 @Override
                 public void onResponse(Call<User> call, Response<User> response) {
-                    progressBar.setVisibility(View.GONE);
+                    if (progressBar != null) {
+                        progressBar.setVisibility(View.GONE);
+                    }
                     user = response.body();
                     if (user != null) {
+                        if (user.getRole() == null) {
+                            user.setRole("user");
+                        }
+                        user.setLoginType("google");
+                        Log.d(TAG, "Google login user: " + user.toString());
                         Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
                         saveUserAndNavigate(user);
                     } else {
@@ -125,34 +145,57 @@ public class LoginActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call<User> call, Throwable t) {
-                    progressBar.setVisibility(View.GONE);
+                    if (progressBar != null) {
+                        progressBar.setVisibility(View.GONE);
+                    }
                     Toast.makeText(LoginActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                     Log.e(TAG, "Google Sign-In API call failed: " + t.getMessage());
                 }
             });
         } else {
-            progressBar.setVisibility(View.GONE);
+            if (progressBar != null) {
+                progressBar.setVisibility(View.GONE);
+            }
             Toast.makeText(this, "Google Sign-In account not found", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void tvForgotPasswordClick() {
-        tvForgotPassword.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
-        });
+        if (tvForgotPassword != null) {
+            tvForgotPassword.setOnClickListener(v -> {
+                startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
+            });
+        } else {
+            Log.e(TAG, "tvForgotPassword is null. Check R.id.tvForgotPassword in activity_login.xml");
+            Toast.makeText(this, "Error: Forgot Password link not found", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void tvRegisterClick() {
-        tvRegister.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
-        });
+        if (tvRegister != null) {
+            tvRegister.setOnClickListener(v -> {
+                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
+            });
+        } else {
+            Log.e(TAG, "tvRegister is null. Check R.id.tvRegister in activity_login.xml");
+            Toast.makeText(this, "Error: Register link not found", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void btnLoginClick() {
-        btnLogin.setOnClickListener(v -> Login());
+        if (btnLogin != null) {
+            btnLogin.setOnClickListener(v -> Login());
+        } else {
+            Log.e(TAG, "btnLogin is null. Check R.id.btnSignUp in activity_login.xml");
+            Toast.makeText(this, "Error: Login button not found", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void Login() {
+        if (etUserName == null || etPassword == null) {
+            Toast.makeText(this, "Error: Username or Password field not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
         String username = etUserName.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
@@ -168,24 +211,34 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        progressBar.setVisibility(View.VISIBLE);
+        if (progressBar != null) {
+            progressBar.setVisibility(View.VISIBLE);
+        }
         UserAPI.userApi.Login(username, password).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
-                progressBar.setVisibility(View.GONE);
+                if (progressBar != null) {
+                    progressBar.setVisibility(View.GONE);
+                }
                 user = response.body();
                 if (user != null) {
+                    if (user.getRole() == null) {
+                        user.setRole("user");
+                    }
+                    Log.d(TAG, "User login: " + user.toString());
                     Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
                     saveUserAndNavigate(user);
                 } else {
                     Toast.makeText(LoginActivity.this, "Incorrect Username or Password", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Login failed: Invalid credentials");
+                    Log.e(TAG, "Login failed: Invalid credentials, code: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
-                progressBar.setVisibility(View.GONE);
+                if (progressBar != null) {
+                    progressBar.setVisibility(View.GONE);
+                }
                 Toast.makeText(LoginActivity.this, "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "Login API call failed: " + t.getMessage());
             }
@@ -208,11 +261,21 @@ public class LoginActivity extends AppCompatActivity {
     private void anhXa() {
         etUserName = findViewById(R.id.etUserName);
         etPassword = findViewById(R.id.etPassword);
-        btnLogin = findViewById(R.id.btnSignUp); // Fixed typo (was btnSignUp)
+        btnLogin = findViewById(R.id.btnSignUp); // Sửa thành btnSignUp
         tvRegister = findViewById(R.id.tvRegister);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
         progressBar = findViewById(R.id.progressBar);
         clGoogle = findViewById(R.id.clGoogle);
         tvAdmin = findViewById(R.id.tvAdmin);
+
+        // Kiểm tra null để debug
+        if (etUserName == null) Log.e(TAG, "etUserName is null. Check R.id.etUserName in activity_login.xml");
+        if (etPassword == null) Log.e(TAG, "etPassword is null. Check R.id.etPassword in activity_login.xml");
+        if (btnLogin == null) Log.e(TAG, "btnLogin is null. Check R.id.btnSignUp in activity_login.xml");
+        if (tvRegister == null) Log.e(TAG, "tvRegister is null. Check R.id.tvRegister in activity_login.xml");
+        if (tvForgotPassword == null) Log.e(TAG, "tvForgotPassword is null. Check R.id.tvForgotPassword in activity_login.xml");
+        if (progressBar == null) Log.e(TAG, "progressBar is null. Check R.id.progressBar in activity_login.xml");
+        if (clGoogle == null) Log.e(TAG, "clGoogle is null. Check R.id.clGoogle in activity_login.xml");
+        if (tvAdmin == null) Log.e(TAG, "tvAdmin is null. Check R.id.tvAdmin in activity_login.xml");
     }
 }

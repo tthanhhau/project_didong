@@ -1,4 +1,3 @@
-
 package com.example.fashionstoreapp.Activity;
 
 import android.app.Dialog;
@@ -6,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +37,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class UserActivity extends AppCompatActivity {
+    private static final String TAG = UserActivity.class.getName();
     ImageView ivHome, ivUser, ivCart, ivHistory, ivAvatar;
     Button btnEditProfile, btnLogout;
     TextView tvFullName, tvId, tvTotalOrder, tvTotalPrice, tvChangePassword, tvEmail, tvPhone, tvAddress;
@@ -147,19 +148,31 @@ public class UserActivity extends AppCompatActivity {
     }
 
     private void LoadData() {
-        user = ObjectSharedPreferences.getSavedObjectFromPreference(UserActivity.this, "User", "MODE_PRIVATE", User.class);
+        user = ObjectSharedPreferences.getSavedObjectFromPreference(
+                UserActivity.this, "User", "MODE_PRIVATE", User.class);
         if (user == null || user.getId() == null || user.getPassword() == null) {
             Toast.makeText(UserActivity.this, "Vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(UserActivity.this, LoginActivity.class));
             finish();
             return;
         }
-        UserAPI.userApi.Login(user.getId(), user.getPassword()).enqueue(new Callback<User>() {
+
+        // Gọi API để làm mới dữ liệu
+        Call<User> call = user.isAdmin() ?
+                UserAPI.userApi.LoginAdmin(user.getId(), user.getPassword()) :
+                UserAPI.userApi.Login(user.getId(), user.getPassword());
+        call.enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     user = response.body();
-                    ObjectSharedPreferences.saveObjectToSharedPreference(UserActivity.this, "User", "MODE_PRIVATE", user);
+                    // Đảm bảo role đúng
+                    if (user.getRole() == null) {
+                        user.setRole(user.isAdmin() ? "admin" : "user");
+                    }
+                    ObjectSharedPreferences.saveObjectToSharedPreference(
+                            UserActivity.this, "User", "MODE_PRIVATE", user);
+                    Log.d(TAG, "User loaded: " + user.toString());
 
                     tvFullName.setText(user.getUserName() != null ? user.getUserName() : "N/A");
                     tvId.setText(user.getId() != null ? user.getId() : "N/A");
@@ -191,14 +204,18 @@ public class UserActivity extends AppCompatActivity {
                         Glide.with(UserActivity.this)
                                 .load(user.getAvatar())
                                 .into(ivAvatar);
+                    } else {
+                        ivAvatar.setImageResource(R.drawable.avatar_admin);
                     }
                 } else {
+                    Log.e(TAG, "Failed to load user: " + response.code() + " - " + response.message());
                     Toast.makeText(UserActivity.this, "Không thể tải thông tin người dùng", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
+                Log.e(TAG, "Connection error: " + t.getMessage());
                 Toast.makeText(UserActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
