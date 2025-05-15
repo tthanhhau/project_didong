@@ -1,7 +1,5 @@
 package com.example.fashionstoreapp.Adapter;
 
-import static java.lang.Integer.parseInt;
-
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -10,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -48,7 +47,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     @Override
     public CartAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.viewholder_cart, parent, false);
-        return new CartAdapter.ViewHolder(inflate);
+        return new ViewHolder(inflate);
     }
 
     @Override
@@ -69,12 +68,12 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         }
 
         // Thiết lập các giá trị giao diện
+        Locale localeVN = new Locale("vi", "VN");
+        NumberFormat vn = NumberFormat.getInstance(localeVN);
         holder.tvCount.setText(String.valueOf(cart.getCount()));
         holder.tvProductName.setText(cart.getProduct().getProductName());
-        Locale localeEN = new Locale("en", "EN");
-        NumberFormat en = NumberFormat.getInstance(localeEN);
-        holder.tvPrice.setText(en.format(cart.getProduct().getPrice()));
-        holder.tvTotalPrice.setText(en.format(cart.getProduct().getPrice() * cart.getCount()));
+        holder.tvPrice.setText(vn.format(cart.getProduct().getPrice()) + " ₫");
+        holder.tvTotalPrice.setText(vn.format(cart.getProduct().getPrice() * cart.getCount()) + " ₫");
 
         // Kiểm tra và tải hình ảnh sản phẩm
         if (cart.getProduct().getProductImages() != null && !cart.getProduct().getProductImages().isEmpty()) {
@@ -85,27 +84,24 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
         // Sự kiện xóa sản phẩm
         holder.layout_delete.setOnClickListener(v -> {
-            String totalPriceText = holder.tvTotalPrice.getText().toString().replace(",", "");
-            try {
-                int price = parseInt(totalPriceText) * (-1);
-                CartAPI.cartAPI.deleteCart(cart.getId(), user.getId()).enqueue(new Callback<String>() {
-                    @Override
-                    public void onResponse(Call<String> call, Response<String> response) {
-                        if (response.isSuccessful()) {
-                            cartItemInterface.onClickUpdatePrice(price);
-                            notifyItemRemoved(holder.getAdapterPosition());
-                            carts.remove(cart);
-                        }
+            double totalPrice = cart.getProduct().getPrice() * cart.getCount() * (-1); // Tính giá âm để trừ
+            CartAPI.cartAPI.deleteCart(cart.getId(), user.getId()).enqueue(new Callback<String>() {
+                @Override
+                public void onResponse(Call<String> call, Response<String> response) {
+                    if (response.isSuccessful()) {
+                        cartItemInterface.onClickUpdatePrice(-999); // Gửi tín hiệu tính lại tổng
+                        notifyItemRemoved(holder.getAdapterPosition());
+                        carts.remove(cart);
+                    } else {
+                        Log.e("CartAdapter", "Delete cart failed: " + response.message());
                     }
+                }
 
-                    @Override
-                    public void onFailure(Call<String> call, Throwable t) {
-                        Log.e("CartAdapter", "Delete cart failed: " + t.getMessage());
-                    }
-                });
-            } catch (NumberFormatException e) {
-                Log.e("CartAdapter", "Invalid total price format: " + totalPriceText);
-            }
+                @Override
+                public void onFailure(Call<String> call, Throwable t) {
+                    Log.e("CartAdapter", "Delete cart failed: " + t.getMessage());
+                }
+            });
         });
 
         // Sự kiện nhấn vào hình ảnh sản phẩm
@@ -118,44 +114,64 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         // Sự kiện tăng số lượng
         holder.ivPlus.setOnClickListener(v -> {
             if (cart.getCount() < cart.getProduct().getQuantity()) {
-                cart.setCount(cart.getCount() + 1);
+                int newCount = cart.getCount() + 1;
+                cart.setCount(newCount);
                 CartAPI.cartAPI.addToCart(user.getId(), cart.getProduct().getId(), 1).enqueue(new Callback<Cart>() {
                     @Override
                     public void onResponse(Call<Cart> call, Response<Cart> response) {
                         if (response.isSuccessful()) {
                             double price = cart.getProduct().getPrice();
-                            holder.tvCount.setText(String.valueOf(parseInt(holder.tvCount.getText().toString()) + 1));
-                            holder.tvTotalPrice.setText(en.format(price * parseInt(holder.tvCount.getText().toString())));
-                            cartItemInterface.onClickUpdatePrice(price);
+                            // Cập nhật số lượng và tổng giá sản phẩm trên giao diện
+                            holder.tvCount.setText(String.valueOf(newCount));
+                            holder.tvTotalPrice.setText(vn.format(price * newCount) + " ₫");
+                            // Gửi tín hiệu tính lại tổng
+                            cartItemInterface.onClickUpdatePrice(-999);
+                        } else {
+                            // Hoàn tác nếu API thất bại
+                            cart.setCount(cart.getCount() - 1);
+                            Log.e("CartAdapter", "Add to cart failed: " + response.message());
                         }
                     }
 
                     @Override
                     public void onFailure(Call<Cart> call, Throwable t) {
-                        Log.e("CartAdapter", "Update cart failed: " + t.getMessage());
+                        // Hoàn tác nếu gọi API thất bại
+                        cart.setCount(cart.getCount() - 1);
+                        Log.e("CartAdapter", "Add to cart failed: " + t.getMessage());
                     }
                 });
+            } else {
+                Toast.makeText(context, "Số lượng vượt quá tồn kho", Toast.LENGTH_SHORT).show();
             }
         });
 
         // Sự kiện giảm số lượng
         holder.ivMinus.setOnClickListener(v -> {
             if (cart.getCount() > 1) {
-                cart.setCount(cart.getCount() - 1);
+                int newCount = cart.getCount() - 1;
+                cart.setCount(newCount);
                 CartAPI.cartAPI.addToCart(user.getId(), cart.getProduct().getId(), -1).enqueue(new Callback<Cart>() {
                     @Override
                     public void onResponse(Call<Cart> call, Response<Cart> response) {
                         if (response.isSuccessful()) {
                             double price = cart.getProduct().getPrice();
-                            holder.tvCount.setText(String.valueOf(parseInt(holder.tvCount.getText().toString()) - 1));
-                            holder.tvTotalPrice.setText(en.format(price * parseInt(holder.tvCount.getText().toString())));
-                            cartItemInterface.onClickUpdatePrice(price * -1);
+                            // Cập nhật số lượng và tổng giá sản phẩm trên giao diện
+                            holder.tvCount.setText(String.valueOf(newCount));
+                            holder.tvTotalPrice.setText(vn.format(price * newCount) + " ₫");
+                            // Gửi tín hiệu tính lại tổng
+                            cartItemInterface.onClickUpdatePrice(-999);
+                        } else {
+                            // Hoàn tác nếu API thất bại
+                            cart.setCount(cart.getCount() + 1);
+                            Log.e("CartAdapter", "Reduce cart failed: " + response.message());
                         }
                     }
 
                     @Override
                     public void onFailure(Call<Cart> call, Throwable t) {
-                        Log.e("CartAdapter", "Update cart failed: " + t.getMessage());
+                        // Hoàn tác nếu gọi API thất bại
+                        cart.setCount(cart.getCount() + 1);
+                        Log.e("CartAdapter", "Reduce cart failed: " + t.getMessage());
                     }
                 });
             }

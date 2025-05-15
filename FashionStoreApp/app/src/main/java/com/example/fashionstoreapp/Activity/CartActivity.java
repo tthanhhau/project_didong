@@ -39,11 +39,9 @@ public class CartActivity extends AppCompatActivity implements CartItemInterface
     RecyclerView recyclerViewCart;
     Button btnCheckout;
     TextView tvTotalPrice;
-
     ImageView ivHome, ivUser, ivCart, ivHistory;
     ConstraintLayout clCartIsEmpty, clCart;
     List<Cart> listCart = new ArrayList<>();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +73,6 @@ public class CartActivity extends AppCompatActivity implements CartItemInterface
             startActivity(new Intent(CartActivity.this, CartActivity.class));
             finish();
         });
-
         ivHistory.setOnClickListener(v -> {
             startActivity(new Intent(CartActivity.this, OrderActivity.class));
             finish();
@@ -95,8 +92,6 @@ public class CartActivity extends AppCompatActivity implements CartItemInterface
             Toast.makeText(this, "Vui lòng đăng nhập để xem giỏ hàng", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        CartItemInterface cartItemInterface = this;
 
         // Gọi API để lấy danh sách giỏ hàng
         CartAPI.cartAPI.cartOfUser(user.getId()).enqueue(new Callback<List<Cart>>() {
@@ -118,7 +113,7 @@ public class CartActivity extends AppCompatActivity implements CartItemInterface
                                     public void onResponse(Call<List<ProductImage>> call, Response<List<ProductImage>> response) {
                                         if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                                             cart.getProduct().setProductImages(response.body());
-                                            cartAdapter.notifyDataSetChanged(); // Cập nhật adapter khi hình ảnh được tải
+                                            cartAdapter.notifyDataSetChanged();
                                             Log.d("CartActivity", "Loaded images for product ID: " + cart.getProduct().getId());
                                         }
                                     }
@@ -132,22 +127,14 @@ public class CartActivity extends AppCompatActivity implements CartItemInterface
                         }
 
                         // Cập nhật adapter
-                        cartAdapter = new CartAdapter(cartItemInterface, listCart, CartActivity.this);
+                        cartAdapter = new CartAdapter(CartActivity.this, listCart, CartActivity.this);
                         recyclerViewCart.setAdapter(cartAdapter);
 
-                        // Tính tổng giá
-                        int total = 0;
-                        for (Cart cart : listCart) {
-                            if (cart.getProduct() != null) {
-                                total += cart.getCount() * cart.getProduct().getPrice();
-                            }
-                        }
-                        Locale localeVN = new Locale("vi", "VN"); // Sử dụng locale Việt Nam
-                        NumberFormat formatter = NumberFormat.getInstance(localeVN);
-                        tvTotalPrice.setText(formatter.format(total) + " ₫"); // Hiển thị giá với ký hiệu ₫
+                        // Tính và hiển thị tổng giá
+                        updateTotalPrice();
                         clCartIsEmpty.setVisibility(View.GONE);
                         clCart.setVisibility(View.VISIBLE);
-                        Log.d("CartActivity", "Cart loaded with " + listCart.size() + " items, total price: " + total);
+                        Log.d("CartActivity", "Cart loaded with " + listCart.size() + " items");
                     }
                 } else {
                     clCartIsEmpty.setVisibility(View.VISIBLE);
@@ -166,6 +153,7 @@ public class CartActivity extends AppCompatActivity implements CartItemInterface
             }
         });
     }
+
     private void AnhXa() {
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
         ivHome = findViewById(R.id.ivHome);
@@ -177,21 +165,27 @@ public class CartActivity extends AppCompatActivity implements CartItemInterface
         btnCheckout = findViewById(R.id.btnCheckout);
     }
 
-    @Override
-    public void onClickUpdatePrice(int price) {
-        Locale localeEN = new Locale("en", "EN");
-        NumberFormat en = NumberFormat.getInstance(localeEN);
-        int total = Integer.parseInt(tvTotalPrice.getText().toString().replace(",",""));
-        total += price;
-        if (total ==0){
+    private void updateTotalPrice() {
+        Locale localeVN = new Locale("vi", "VN");
+        NumberFormat formatter = NumberFormat.getInstance(localeVN);
+        double total = 0;
+        for (Cart cart : listCart) {
+            if (cart.getProduct() != null) {
+                total += cart.getCount() * cart.getProduct().getPrice();
+            }
+        }
+        tvTotalPrice.setText(formatter.format(total) + " ₫");
+        if (total <= 0) {
             clCartIsEmpty.setVisibility(View.VISIBLE);
             clCart.setVisibility(View.GONE);
+        } else {
+            clCartIsEmpty.setVisibility(View.GONE);
+            clCart.setVisibility(View.VISIBLE);
         }
-        tvTotalPrice.setText(en.format(total));
     }
 
     @Override
     public void onClickUpdatePrice(double price) {
-
+        updateTotalPrice();
     }
 }
