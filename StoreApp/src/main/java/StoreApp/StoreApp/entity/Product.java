@@ -99,4 +99,12 @@ public class Product {
         }
         this.category.setId(categoryId);
     }
+    @Override
+    public String toString() {
+        return "Product{" +
+                "id=" + id +
+                ", name=" + product_name +
+                ", ratingCount=" + (ratings != null ? ratings.size() : 0) +
+                '}';
+    }
 }

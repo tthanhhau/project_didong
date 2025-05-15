@@ -30,4 +30,13 @@ public class Rating {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Override
+    public String toString() {
+        return "Rating{" +
+                "id=" + id +
+                ", score=" + rate +
+                ", productId=" + (product != null ? product.getId() : null) +
+                '}';
+    }
 }
