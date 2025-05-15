@@ -33,11 +33,7 @@ import lombok.ToString;
 @Data // lombok giúp generate các hàm constructor, get, set v.v.
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "order")
-@JsonIdentityInfo(
-	    generator = ObjectIdGenerators.PropertyGenerator.class,
-	    property = "id"
-	)
+@Table(name = "`order`")
 public class Order {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -74,12 +70,14 @@ public class Order {
 	private String note;
 	
 	@OneToMany(mappedBy = "order")
+	@JsonBackReference ("order-order_Item")
 	private List<Order_Item> order_Item;
 	
 	
 	@ManyToOne
-	@JoinColumn(name = "user_id" , nullable = false)
+	@JoinColumn(name = "user_id")
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude 
+	@JsonManagedReference ("order-user")
 	private User user;
 }

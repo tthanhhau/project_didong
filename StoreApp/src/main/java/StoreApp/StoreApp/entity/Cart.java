@@ -29,10 +29,6 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "cart")
-@JsonIdentityInfo(
-	    generator = ObjectIdGenerators.PropertyGenerator.class,
-	    property = "id"
-	)
 public class Cart {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +41,7 @@ public class Cart {
 	@JoinColumn(name = "user_id")
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
+	@JsonManagedReference("user-cart")	
 	private User user;
 	
 	
@@ -52,5 +49,6 @@ public class Cart {
 	@JoinColumn(name = "product_id")
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
+	@JsonManagedReference("product-cart")
 	private Product product;
 }

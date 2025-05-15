@@ -100,8 +100,6 @@ public class OrderController {
 		return new ResponseEntity<>(listOrderDto, HttpStatus.OK);
 	}
 	
-	
-	
 	@GetMapping(path = "/ordermethod")
 	public ResponseEntity<List<OrderDto>> getOrderByPaymentMethod(String user_id, String method){
 		System.out.println(user_id);

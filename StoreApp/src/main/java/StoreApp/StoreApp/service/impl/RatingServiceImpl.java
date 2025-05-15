@@ -21,11 +21,16 @@ public class RatingServiceImpl implements RatingService{
 		return ratingRepository.getRatingsByProductIdNative(id);
 	}
 	@Override
-	public List<Object[]> checkPurchaseAndRating(String user_id,int id) {
-		return ratingRepository.checkPurchaseAndRatingNative(user_id,id);
+	public boolean checkPurchaseAndRating(String userId, Integer productId) {
+	    return ratingRepository.existsByProduct_IdAndUser_Id(productId, userId);
 	}
+
 	@Override
 	public void addRating(Rating rating) {
 		 ratingRepository.save(rating);
+	}
+	@Override
+	public boolean existsByUserIdAndProductId(String userId,Integer productId) {
+		return ratingRepository.existsByProduct_IdAndUser_Id(productId,userId);
 	}
 }

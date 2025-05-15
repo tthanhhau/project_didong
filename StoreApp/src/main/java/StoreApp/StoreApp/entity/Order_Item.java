@@ -29,10 +29,6 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "order_item")
-@JsonIdentityInfo(
-	    generator = ObjectIdGenerators.PropertyGenerator.class,
-	    property = "id"
-	)
 public class Order_Item {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,11 +41,13 @@ public class Order_Item {
 	@JoinColumn(name = "product_id")
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
+	@JsonManagedReference ("product-order")
 	private Product product;
 	
 	@ManyToOne
 	@JoinColumn(name = "order_id")
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
+	@JsonManagedReference ("orde_item-order")
 	private Order order;
 }

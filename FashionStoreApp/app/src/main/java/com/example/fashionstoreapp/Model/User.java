@@ -77,6 +77,11 @@ public class User implements Serializable {
 		this.rating = rating;
 	}
 
+	public User(String id) {
+		this.id=id;
+	}
+
+
 	// Getters
 	public String getId() {
 		return id;

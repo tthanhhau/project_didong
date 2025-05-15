@@ -85,8 +85,5 @@ public class ProductServiceImpl implements ProductService {
 	public List<Product> findTop4ProductByCategory_id(int id) {
 		return productRepository.findTop4ProductByCategory_id(id);
 	}
-	@Override
-	public List<Product> getProductByCategoryID(int id){
-		return productRepository.findByCategory_Id(id);
-	}
+	
 }

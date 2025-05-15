@@ -1,22 +1,32 @@
 package com.example.fashionstoreapp.Model;
 
-import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class Rating {
     @SerializedName("id")
-    @Expose
     private int id;
 
     @SerializedName("rate")
-    @Expose
     private int rate;
+
     @SerializedName("description")
-    @Expose
     private String description;
 
-    private User user;
-    private Product product;
+    @SerializedName("product_id")
+    private Integer productId; // Sử dụng Integer để khớp với Product.id
+
+    @SerializedName("user_id")
+    private String userId;
+
+    public Rating() {
+    }
+
+    public Rating(int rate, String description, Integer productId, String userId) {
+        this.rate = rate;
+        this.description = description;
+        this.productId = productId;
+        this.userId = userId;
+    }
 
     public int getId() {
         return id;
@@ -42,27 +52,19 @@ public class Rating {
         this.description = description;
     }
 
-    public User getUser() {
-        return user;
+    public Integer getProductId() {
+        return productId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setProductId(Integer productId) {
+        this.productId = productId;
     }
 
-    public Product getProduct() {
-        return product;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
-    public Rating(int id, int rate, String description, User user, Product product) {
-        this.id = id;
-        this.rate = rate;
-        this.description = description;
-        this.user = user;
-        this.product = product;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 }

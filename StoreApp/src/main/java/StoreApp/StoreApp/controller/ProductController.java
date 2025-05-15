@@ -2,7 +2,9 @@ package StoreApp.StoreApp.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +17,13 @@ import StoreApp.StoreApp.entity.Cart;
 import StoreApp.StoreApp.entity.Category;
 import StoreApp.StoreApp.entity.Product;
 import StoreApp.StoreApp.entity.ProductImage;
+import StoreApp.StoreApp.model.ProductDto;
+import StoreApp.StoreApp.model.ProductImageDto;
 import StoreApp.StoreApp.service.CartService;
 import StoreApp.StoreApp.service.CategoryService;
 import StoreApp.StoreApp.service.ProductImageService;
 import StoreApp.StoreApp.service.ProductService;
-import org.springframework.http.MediaType;
+
 @RestController
 public class ProductController {
 	@Autowired
@@ -30,7 +34,8 @@ public class ProductController {
 	ProductImageService productImageService;
 	@Autowired
 	CategoryService categoryService;
-	
+	@Autowired
+	private ModelMapper modelMapper;
 	@GetMapping(path = "/newproduct")
 	public ResponseEntity<List<Product>> newProduct(){
 		List<Product> newProducts = productService.findTop12ProductNewArrivals();
@@ -48,43 +53,57 @@ public class ProductController {
 		List<Product> products = productService.findByProduct_NameContaining(searchContent);
 		return new ResponseEntity<>(products, HttpStatus.OK);
 	}
-	@GetMapping(path = "/getProductByCategoryID")
-	public ResponseEntity<List<Product>> getProductByCategoryID(int id){
-		List<Product> products = productService.getProductByCategoryID(id);
-		return new ResponseEntity<>(products, HttpStatus.OK);
-	}
 	@GetMapping(path = "/getAll")
 	public ResponseEntity<List<Product>> GetProducts(){
 		List<Product> products = productService.getAllProduct();
 		return new ResponseEntity<>(products, HttpStatus.OK);
 	}
-	@PostMapping(path="/add", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<?> addProduct(@RequestBody Product product) {
-	    try {
-	        Category category = categoryService.getCategoryById(product.getCategoryId());
-	        product.setCategory(category);
+	@PostMapping("/add")
+    public ResponseEntity<?> addProduct(@RequestBody ProductDto productDto) {
+        try {
+            // Validate input
+            if (productDto == null || productDto.getCategory_id() <= 0) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Invalid product or category data"));
+            }
 
-	        // Lưu sản phẩm
-	        Product savedProduct = productService.saveProduct(product);
+            // Fetch category entity by ID
+            Category category = categoryService.getCategoryById(productDto.getCategory_id());
+            if (category == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("success", false, "message", "Category not found"));
+            }
+            
+            // Map ProductDto to Product entity
+            Product product = modelMapper.map(productDto, Product.class);
+            product.setCategory(category);
 
-	        // Lưu hình ảnh
-	        if (product.getProductImages() != null && !product.getProductImages().isEmpty()) {
-	            for (ProductImage image : product.getProductImages()) {
-	                image.setProduct(savedProduct);
-	                productImageService.save(image);
-	            }
-	        }
+            // Save product
+            Product savedProduct = productService.saveProduct(product);
 
-	        return ResponseEntity.ok(Map.of("success", true, "message", "Product added successfully"));
-	    } catch (RuntimeException e) {
-	        return ResponseEntity.badRequest()
-	                .body(Map.of("success", false, "message", "Failed to add product: " + e.getMessage()));
-	    } catch (Exception e) {
-	        String errorMessage = e.getMessage() != null ? e.getMessage() : e.toString();
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(Map.of("success", false, "message", "Failed to add product: " + errorMessage));
-	    }
-	}
+            // Save product images if present
+            List<ProductImageDto> productImageDtos = productDto.getProductImage();
+            if (productImageDtos != null && !productImageDtos.isEmpty()) {
+                List<ProductImage> productImages = productImageDtos.stream()
+                        .map(dto -> {
+                            ProductImage image = modelMapper.map(dto, ProductImage.class);
+                            image.setProduct(savedProduct);
+                            return image;
+                        })
+                        .collect(Collectors.toList());
+                productImages.forEach(productImageService::save);
+            }
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "Product added successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Failed to add product: " + e.getMessage()));
+        } catch (Exception e) {
+            String errorMessage = e.getMessage() != null ? e.getMessage() : e.toString();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Failed to add product: " + errorMessage));
+        }
+    }
 	@PostMapping("/remove")
 	public ResponseEntity<?> removeProduct(int id) {
 	    try {
