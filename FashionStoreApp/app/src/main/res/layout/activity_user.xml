@@ -47,11 +47,11 @@
                         android:id="@+id/constraintLayout13"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="40dp"
+                        android:layout_marginTop="56dp"
                         android:background="@drawable/background_category"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/textView32">
+                        app:layout_constraintTop_toTopOf="parent">
 
                         <de.hdodenhof.circleimageview.CircleImageView
                             android:id="@+id/ivAvatar"
@@ -66,24 +66,11 @@
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <TextView
-                        android:id="@+id/textView32"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:text="My Profile"
-                        android:textColor="#FFFFFF"
-                        android:textSize="30sp"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <TextView
                         android:id="@+id/tvFullName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Võ Hoàn Hảo"
+                        android:text="Tô Hậu"
                         android:textColor="#FFFFFF"
                         android:textSize="18sp"
                         android:textStyle="bold"
@@ -117,7 +104,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="5dp"
-                            android:text="hoanhao1512"
+                            android:text="hau12"
                             android:textColor="#FFFFFF"
                             android:textSize="16sp"
                             android:textStyle="bold"
@@ -152,7 +139,6 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent">
-
 
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:id="@+id/constraintLayout22"
@@ -211,7 +197,7 @@
                                         android:id="@+id/textView41"
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:text="Order"
+                                        android:text="Đơn hàng"
                                         android:textAlignment="center"
                                         android:textColor="#000000"
                                         android:textSize="13sp"
@@ -284,7 +270,7 @@
                                         android:id="@+id/textView4"
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:text="Paid"
+                                        android:text="Đã thanh toán"
                                         android:textAlignment="center"
                                         android:textColor="#000000"
                                         android:textSize="13sp"
@@ -298,7 +284,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_marginTop="2dp"
-                                        android:text="2,550,000"
+                                        android:text="550,000"
                                         android:textColor="#000000"
                                         android:textSize="13sp"
                                         android:textStyle="bold"
@@ -408,10 +394,10 @@
                             app:layout_constraintTop_toBottomOf="@+id/view1">
 
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:layout_width="156dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Phone:"
+                                android:text="Số điện thoại:"
                                 android:textColor="#182693"
                                 android:textSize="18sp" />
 
@@ -454,7 +440,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Address:"
+                                android:text="Địa chỉ:"
                                 android:textColor="#182693"
                                 android:textSize="18sp" />
 
@@ -463,7 +449,7 @@
                                 android:layout_width="240dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="498, Lê Văn Việt, Tăng Nhơn Phú A, Quận 9, Thành Phố Hồ Chí Minh"
+                                android:text="TPHCM"
                                 android:textAlignment="viewEnd"
                                 android:textColor="#222222"
                                 android:textSize="16sp" />
