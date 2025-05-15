@@ -27,4 +27,8 @@ public class Order_ItemServiceImpl implements Order_ItemService{
 	public void deleteById(int id) {
 		order_ItemRepository.deleteById(id);
 	}
+	@Override
+    public boolean existsByProduct_IdAndUser_Id(Integer productId, String userId) {
+    	return order_ItemRepository.existsByProductIdAndUserId(productId, userId);
+    	}
 }

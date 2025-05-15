@@ -80,7 +80,7 @@ public class UserController {
 			String encodedValue = Base64.getEncoder().encodeToString(password.getBytes());
 			String avatar = "https://haycafe.vn/wp-content/uploads/2022/02/Avatar-trang-den.png";
 			User newUser = userService.saveUser(new User(username, "default", "user", encodedValue, fullname, avatar,
-					email, null, null, null, null));
+					email, null, null, null, null,null));
 			System.out.println(newUser);
 			return new ResponseEntity<>(newUser, HttpStatus.OK);
 		}
@@ -152,13 +152,13 @@ public class UserController {
 		}
 	}
 
-//	@PostMapping(path = "google", consumes = "application/x-www-form-urlencoded")
-//	public ResponseEntity<User> LoginWithGoogle(String id, String fullname, String email, String avatar) {
-//		User user = userService.findByIdAndRole(id, "user");
-//		if (user == null) {
-//			user = userService
-//					.saveUser(new User(id, "google", "user", null, fullname, avatar, email, null, null, null, null));
-//		}
-//		return new ResponseEntity<User>(user, HttpStatus.OK);
-//	}
+	@PostMapping(path = "google", consumes = "application/x-www-form-urlencoded")
+	public ResponseEntity<User> LoginWithGoogle(String id, String fullname, String email, String avatar) {
+		User user = userService.findByIdAndRole(id, "user");
+		if (user == null) {
+			user = userService
+					.saveUser(new User(id, "google", "user", null, fullname, avatar, email, null, null, null, null,null));
+		}
+		return new ResponseEntity<User>(user, HttpStatus.OK);
+	}
 }

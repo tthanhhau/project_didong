@@ -8,18 +8,19 @@ import lombok.Data;
 import java.io.Serializable;
 import java.sql.Date;
 import java.util.List;
+import java.util.Locale.Category;
 @Data
 public class ProductDto {
 	private int id;
-	private String product_Name;
+	private String product_name;
 	private String description;
 	private int sold;
-	private int is_Active;
-	private int is_Selling;
-	private Date created_At;
+	private int is_active;
+	private int is_selling;
+	private Date created_at;
 	private int price;
 	private int quantity;
-//	private Category category;
 	private List<ProductImageDto> productImage;
 	private List<CartDto> cartDto;
+	private int category_id;
 }

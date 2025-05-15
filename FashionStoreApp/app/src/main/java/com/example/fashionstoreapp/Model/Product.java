@@ -12,17 +12,17 @@ public class Product implements Serializable {
 	@SerializedName("id")
 	private int id;
 	@SerializedName("product_name")
-	private String productName;
+	private String product_name;
 	@SerializedName("description")
 	private String description;
 	@SerializedName("sold")
 	private int sold;
 	@SerializedName("is_active")
-	private int isActive;
+	private int is_active;
 	@SerializedName("is_selling")
-	private int isSelling;
+	private int is_selling;
 	@SerializedName("created_at")
-	private String createdAt;
+	private String created_at;
 	@SerializedName("price")
 	private double price;
 	@SerializedName("quantity")
@@ -42,12 +42,12 @@ public class Product implements Serializable {
 	public Product(int id, String productName, String description, int sold, int isActive, int isSelling,
 				   String createdAt, double price, int quantity, List<ProductImage> productImages, int categoryId) {
 		this.id = id;
-		this.productName = productName;
+		this.product_name = productName;
 		this.description = description;
 		this.sold = sold;
-		this.isActive = isActive;
-		this.isSelling = isSelling;
-		this.createdAt = createdAt;
+		this.is_active = isActive;
+		this.is_selling = isSelling;
+		this.created_at = createdAt;
 		this.price = price;
 		this.quantity = quantity;
 		this.productImages = productImages;
@@ -58,23 +58,26 @@ public class Product implements Serializable {
 	// Constructor mặc định
 	public Product() {}
 
+	public Product(int id) {
+		this.id=id;
+	}
 
 
 	// Getters và setters
 	public int getId() { return id; }
 	public void setId(int id) { this.id = id; }
-	public String getProductName() { return productName; }
-	public void setProductName(String productName) { this.productName = productName; }
+	public String getProductName() { return product_name; }
+	public void setProductName(String productName) { this.product_name = productName; }
 	public String getDescription() { return description; }
 	public void setDescription(String description) { this.description = description; }
 	public int getSold() { return sold; }
 	public void setSold(int sold) { this.sold = sold; }
-	public int getIsActive() { return isActive; }
-	public void setIsActive(int isActive) { this.isActive = isActive; }
-	public int getIsSelling() { return isSelling; }
-	public void setIsSelling(int isSelling) { this.isSelling = isSelling; }
-	public String getCreatedAt() { return createdAt; }
-	public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+	public int getIsActive() { return is_active; }
+	public void setIsActive(int isActive) { this.is_active = isActive; }
+	public int getIsSelling() { return is_selling; }
+	public void setIsSelling(int isSelling) { this.is_selling = isSelling; }
+	public String getCreatedAt() { return created_at; }
+	public void setCreatedAt(String createdAt) { this.created_at = createdAt; }
 	public double getPrice() { return price; }
 	public void setPrice(double price) { this.price = price; }
 	public int getQuantity() { return quantity; }

@@ -46,8 +46,7 @@
                 app:sliderIndicatorSelectedColor="#a4a4a4"
                 app:sliderIndicatorUnselectedColor="#d8d8d8"
                 app:sliderScrollTimeInSec="1"
-                app:sliderStartAutoCycle="true">
-            </com.smarteist.autoimageslider.SliderView>
+                app:sliderStartAutoCycle="true" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/clBack"
@@ -72,7 +71,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="450dp"
+            android:layout_height="wrap_content"
             android:background="@drawable/background_white"
             android:orientation="vertical">
 
@@ -169,7 +168,7 @@
                     android:id="@+id/tvPrice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$0"
+                    android:text="0 ₫"
                     android:textColor="#000000"
                     android:textSize="20sp"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -246,28 +245,27 @@
 
             <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-                <androidx.constraintlayout.widget.ConstraintLayout
+                app:layout_constraintStart_toStartOf="parent">
+
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/textView8"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16sp"
-                        android:layout_marginEnd="16sp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
                         android:text="Description:"
                         android:textColor="#373b54"
                         android:textSize="18sp"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toStartOf="@+id/tvDescription"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvDescription"
@@ -279,15 +277,98 @@
                         android:gravity="fill"
                         android:text="Description:"
                         android:textColor="#373b54"
+                        android:textSize="16sp" />
+
+                    <!-- Customer Reviews Section -->
+                    <TextView
+                        android:id="@+id/tvReviewsTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:text="Customer Reviews"
+                        android:textColor="#373b54"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvReviews"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:nestedScrollingEnabled="false"
+                        tools:listitem="@layout/item_review" />
+
+                    <TextView
+                        android:id="@+id/tvNoReviews"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:text="Chưa có đánh giá nào"
+                        android:textColor="#373b54"
                         android:textSize="16sp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/textView8" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                        android:visibility="gone" />
 
+                    <!-- Add Review Section -->
+                    <TextView
+                        android:id="@+id/tvAddReviewTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:text="Add Your Review"
+                        android:textColor="#373b54"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <RatingBar
+                        android:id="@+id/rbUserRating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:numStars="5"
+                        android:stepSize="1.0"
+                        android:rating="0" />
+
+                    <EditText
+                        android:id="@+id/etReviewDescription"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:hint="Write your review here..."
+                        android:inputType="textMultiLine"
+                        android:minHeight="100dp"
+                        android:background="@color/white"
+                        android:padding="8dp"
+                        android:textColor="#373b54"
+                        android:textColorHint="#A0A0A0"
+                        android:textSize="16sp" />
+
+                    <Button
+                        android:id="@+id/btnSubmitReview"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/button_background"
+                        android:padding="12dp"
+                        android:text="Submit Review"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </ScrollView>
-
-
         </LinearLayout>
     </LinearLayout>
 
@@ -299,7 +380,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
-
 
         <LinearLayout
             android:id="@+id/linearLayout"
@@ -333,7 +413,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="$19.50"
+                    android:text="0 ₫"
                     android:textColor="#000000"
                     android:textSize="23sp"
                     android:textStyle="bold"

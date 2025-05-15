@@ -172,6 +172,7 @@ public class AdminController {
 		mailService.sendEmail(mail);
 		return "redirect:" + referer;
 	}
+
 	@GetMapping("/delete-order/{id}")
 	public String DeleteOrder(@PathVariable int id, Model model, HttpServletRequest request) throws Exception {
 		User admin = (User) session.getAttribute("admin");

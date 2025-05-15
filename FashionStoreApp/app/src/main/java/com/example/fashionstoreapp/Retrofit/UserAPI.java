@@ -45,7 +45,7 @@ public interface UserAPI {
     @Multipart
     @POST("/update")
     Call<User> update(@Part("id") RequestBody userId, @Part MultipartBody.Part avatar, @Part("fullname") RequestBody fullName, @Part("email") RequestBody email,
-                      @Part("phoneNumber") RequestBody phoneNumber, @Part("address") RequestBody address);
+                      @Part("phone_number") RequestBody phoneNumber, @Part("address") RequestBody address);
 
     @FormUrlEncoded
     @POST("/google")

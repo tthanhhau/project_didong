@@ -12,8 +12,8 @@ import java.util.List;
 public class OrderDto {
 	private int id;
 	private int total;
-	private Date booking_Date;
-	private String payment_Method;
+	private Date booking_date;
+	private String payment_method;
 	private String status;
 	private String fullname;
 	private String country;
@@ -21,6 +21,6 @@ public class OrderDto {
 	private String phone;
 	private String email;
 	private String note;
-	private List<Order_ItemDto> order_Item;
+	private List<Order_ItemDto> order_item;
 	private UserDto user;
 }

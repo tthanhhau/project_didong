@@ -31,10 +31,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "product_image")
-@JsonIdentityInfo(
-	    generator = ObjectIdGenerators.PropertyGenerator.class,
-	    property = "id"
-	)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class ProductImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,5 +44,6 @@ public class ProductImage {
     @JoinColumn(name = "product_id")
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
+    @JsonManagedReference("product_image-product") 
     private Product product;
 }

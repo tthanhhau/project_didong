@@ -16,16 +16,6 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
     @Query(value = "SELECT * FROM rating WHERE product_id = :productId", nativeQuery = true)
     List<Rating> getRatingsByProductIdNative(@Param("productId") Integer productId);
 
-    @Query(value = "SELECT " +
-                   "EXISTS (" +
-                   "  SELECT 1 " +
-                   "  FROM fashionstore.`order` o " +
-                   "  JOIN fashionstore.order_item od ON o.id = od.order_id " +
-                   "  WHERE o.user_id = :userId " +
-                   "  AND od.product_id = :productId) AS has_purchased" , 
-           nativeQuery = true)
-    List<Object[]> checkPurchaseAndRatingNative(@Param("userId") String userId, @Param("productId") Integer productId);
-    
-
+    boolean existsByProduct_IdAndUser_Id(Integer productId, String userId);
 }
 

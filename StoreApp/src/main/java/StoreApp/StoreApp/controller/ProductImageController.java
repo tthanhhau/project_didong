@@ -22,4 +22,5 @@ public class ProductImageController {
 		List<ProductImage> newProducts = productImageService.findByProductId(id);
 		return new ResponseEntity<>(newProducts, HttpStatus.OK);
 	}
+	
 }

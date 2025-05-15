@@ -28,10 +28,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "user")
-@JsonIdentityInfo(
-	    generator = ObjectIdGenerators.PropertyGenerator.class,
-	    property = "id"
-	)
 public class User {
 	@Id()
 //	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,9 +58,14 @@ public class User {
 	private String address;
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	@JsonBackReference("user-order")
 	private List<Order> order;
 	
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	@JsonBackReference("user-cart")
 	private List<Cart> cart;
 	
+	@OneToMany(mappedBy = "user")
+    @JsonBackReference("user-rating")
+    private List<Rating> ratings;
 }
