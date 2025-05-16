@@ -28,9 +28,9 @@
 - 📊 Thống kê đơn hàng
 - 💬 Phản hồi API dạng JSON
 👤 Trang người Dùng
-Trang chủ: Xem sản phẩm mới, sản phẩm bán chạy.
-Tìm kiếm sản phẩm: Theo tên, từ khóa.
-Xem chi tiết sản phẩm
+   - Trang chủ: Xem sản phẩm mới, sản phẩm bán chạy.
+   - Tìm kiếm sản phẩm: Theo tên, từ khóa.
+     - Xem chi tiết sản phẩm
 Xem sản phẩm cùng loại (theo danh mục)
 Đánh giá sản phẩm khi đã mua hàng
 Đăng ký / Đăng nhập / Cập nhật thông tin cá nhân / Đổi mật khẩu
