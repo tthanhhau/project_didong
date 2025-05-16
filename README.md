@@ -11,7 +11,7 @@ Android App ⇄ Retrofit2 ⇄ Spring Boot API ⇄ MySQL
                                 Cloudinary
 
 
----
+
 
 ## 🚀 Tính năng chính
 
