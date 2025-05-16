@@ -6,12 +6,12 @@
 
 ## 🧩 Kiến trúc hệ thống
 
-Android App
-   ⇄ Retrofit2 ⇄
-Spring Boot API
-   ⇄ MySQL
-    ⇅
- Cloudinary
+| Thành phần      | Kết nối với       |
+| --------------- | ----------------- |
+| Android App     | Retrofit2         |
+| Retrofit2       | Spring Boot API   |
+| Spring Boot API | MySQL, Cloudinary |
+
 
 
 
