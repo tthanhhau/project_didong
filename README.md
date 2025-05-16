@@ -68,8 +68,22 @@
 
 ---
 
-### 🖥️ Cài đặt Backend (Spring Boot)
+📥 Các bước cài đặt
+🔧 API (Spring Boot)
+Tải source code backend và mở bằng Eclipse hoặc IntelliJ IDEA.
 
-1. Tạo database `shopdb` trong MySQL:
-   ```sql
-   CREATE DATABASE shopdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+Đảm bảo đã cài đặt Spring Boot và Lombok.
+
+Cấu hình lại file application.properties để kết nối đúng tài khoản & mật khẩu MySQL.
+
+Chạy project Spring Boot.
+
+🗄️ Database
+Mở MySQL.
+
+Chạy file script.sql đi kèm trong source để tạo database.
+
+📱 Mobile App (Android)
+Mở source code mobile bằng Android Studio.
+
+Cập nhật địa chỉ IP backend và đường dẫn tích hợp ZaloPay theo hướng dẫn trong README của ứng dụng mobile.
