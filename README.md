@@ -27,12 +27,11 @@
 - 📁 Upload hình ảnh sản phẩm
 - 📊 Thống kê đơn hàng
 - 💬 Phản hồi API dạng JSON
-👤 Trang người Dùng
-   - Trang chủ: Xem sản phẩm mới, sản phẩm bán chạy.
-   - Tìm kiếm sản phẩm: Theo tên, từ khóa.
-     - Xem chi tiết sản phẩm
+👤 Chức năng Người Dùng
+Trang chủ: Xem sản phẩm mới, sản phẩm bán chạy.
+Tìm kiếm sản phẩm: Theo tên, từ khóa.
+Xem chi tiết sản phẩm
 Xem sản phẩm cùng loại (theo danh mục)
-Đánh giá sản phẩm khi đã mua hàng
 Đăng ký / Đăng nhập / Cập nhật thông tin cá nhân / Đổi mật khẩu
 Quên mật khẩu: Gửi mật khẩu mới qua Gmail.
 Quản lý giỏ hàng: Thêm, sửa, xoá sản phẩm (hỗ trợ vuốt để xoá).
@@ -42,7 +41,6 @@ Khi nhận hàng (COD)
 Qua ví điện tử ZaloPay
 Thông tin cá nhân: Cho phép upload hình ảnh lên Cloudinary và lưu link ảnh vào database.
 Lịch sử mua hàng: Xem tất cả đơn hàng theo hình thức thanh toán.
----
 
 🛠️ Trang Admin
 Quản lý cơ sở dữ liệu: Tổng quan sản phẩm, loại sản phẩm, đơn hàng, khách hàng.
