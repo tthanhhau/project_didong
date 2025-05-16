@@ -6,6 +6,9 @@
 
 ## 🧩 Kiến trúc hệ thống
 
+Android App ⇄ Retrofit2 ⇄ Spring Boot API ⇄ MySQL
+                                    ⇅
+                                Cloudinary
 
 
 ---
